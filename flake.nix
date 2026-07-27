@@ -2,7 +2,7 @@
   description = "Electronic Product Catalog - React + Vite + TypeScript";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -15,7 +15,6 @@
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
             nodejs
-            nodePackages.npm
             git
           ];
 
