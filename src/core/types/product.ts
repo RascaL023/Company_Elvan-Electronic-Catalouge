@@ -1,5 +1,5 @@
 export interface Product {
-  id: number;
+  id: string;
   title: string;
   price: number;
   description: string;
@@ -10,10 +10,3 @@ export interface Product {
     count: number;
   };
 }
-
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
-
-export type SortOption = 'default' | 'price-asc' | 'price-desc' | 'rating-desc';

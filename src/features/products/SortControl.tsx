@@ -1,4 +1,4 @@
-import { SortOption } from '../types/product';
+import { SortOption } from '../../core/types/common';
 
 interface SortControlProps {
   value: SortOption;

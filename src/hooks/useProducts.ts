@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Product, SortOption } from '../types/product';
-import { fetchProducts } from '../api/products';
+import { Product } from '../core/types/product';
+import { SortOption } from '../core/types/common';
+import { useRepository } from './useRepository';
+import { filterProducts, sortProducts } from '../services/product.service';
 
 interface UseProductsReturn {
   products: Product[];
@@ -13,6 +15,7 @@ export function useProducts(
   searchQuery: string,
   sortOption: SortOption
 ): UseProductsReturn {
+  const { productRepository } = useRepository();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,48 +24,26 @@ export function useProducts(
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchProducts();
+      const data = await productRepository.getAll();
       setAllProducts(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load products');
+      setError(
+        err instanceof Error ? err.message : 'Failed to load products'
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [productRepository]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const filteredAndSorted = useMemo(() => {
-    let result = [...allProducts];
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((p) =>
-        p.title.toLowerCase().includes(query)
-      );
-    }
-
-    switch (sortOption) {
-      case 'price-asc':
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating-desc':
-        result.sort((a, b) => b.rating.rate - a.rating.rate);
-        break;
-    }
-
+  const products = useMemo(() => {
+    let result = filterProducts(allProducts, searchQuery);
+    result = sortProducts(result, sortOption);
     return result;
   }, [allProducts, searchQuery, sortOption]);
 
-  return {
-    products: filteredAndSorted,
-    loading,
-    error,
-    refetch: load,
-  };
+  return { products, loading, error, refetch: load };
 }
