@@ -4,6 +4,7 @@ import { Rating } from '../../components/ui/Rating';
 import { Product } from '../../core/types/product';
 import { formatPrice } from '../../utils/formatters';
 import { getCategoryName } from '../../utils/categories';
+import { ImageService } from '../../services/imageService';
 
 interface ProductModalProps {
   product: Product;
@@ -36,8 +37,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         <div className="flex flex-col md:flex-row">
           <div className="md:w-1/2 p-8 bg-gray-50 flex items-center justify-center">
             <img
-              src={product.image}
-              alt={product.title}
+              src={ImageService.getDetailUrl(product.images[0] || '')}
+              alt={product.name}
               className="w-full max-w-[250px] h-auto object-contain"
             />
           </div>
@@ -46,7 +47,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               {getCategoryName(product.category)}
             </span>
             <h2 className="text-xl font-bold text-gray-900 leading-tight">
-              {product.title}
+              {product.name}
             </h2>
             <Rating rate={product.rating.rate} count={product.rating.count} />
             <p className="text-gray-600 text-sm leading-relaxed">

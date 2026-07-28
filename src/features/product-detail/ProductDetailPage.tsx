@@ -5,6 +5,7 @@ import { getCategoryName } from '../../utils/categories';
 import { Rating } from '../../components/ui/Rating';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { ErrorState } from '../../components/feedback/ErrorState';
+import { ImageService } from '../../services/imageService';
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -45,6 +46,8 @@ export function ProductDetailPage() {
     );
   }
 
+  const primaryImageUrl = ImageService.getDetailUrl(product.images[0] || '');
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <nav className="text-sm text-gray-500 mb-6">
@@ -52,13 +55,13 @@ export function ProductDetailPage() {
           Home
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">{product.title}</span>
+        <span className="text-gray-900">{product.name}</span>
       </nav>
       <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
         <div className="w-full md:w-1/2 bg-gray-50 rounded-2xl p-8 lg:p-12 flex items-center justify-center">
           <img
-            src={product.image}
-            alt={product.title}
+            src={primaryImageUrl}
+            alt={product.name}
             className="w-full max-w-md h-auto object-contain"
           />
         </div>
@@ -67,7 +70,7 @@ export function ProductDetailPage() {
             {getCategoryName(product.category)}
           </span>
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
-            {product.title}
+            {product.name}
           </h1>
           <Rating rate={product.rating.rate} count={product.rating.count} />
           <p className="text-gray-600 leading-relaxed">

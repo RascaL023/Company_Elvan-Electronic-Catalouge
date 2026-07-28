@@ -3,6 +3,7 @@ import { Product } from '../../core/types/product';
 import { formatPrice } from '../../utils/formatters';
 import { getCategoryName } from '../../utils/categories';
 import { Rating } from '../../components/ui/Rating';
+import { ImageService } from '../../services/imageService';
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +11,9 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onQuickView }: ProductCardProps) {
+  const primaryImage = ImageService.getPrimaryUrl(product.images);
+  const thumbnailUrl = ImageService.getThumbnailUrl(primaryImage);
+
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group">
       <Link
@@ -17,8 +21,8 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         className="aspect-square bg-gray-50 p-6 flex items-center justify-center overflow-hidden"
       >
         <img
-          src={product.image}
-          alt={product.title}
+          src={thumbnailUrl}
+          alt={product.name}
           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
@@ -31,7 +35,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
           to={`/product/${product.id}`}
           className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug hover:text-indigo-600 transition-colors"
         >
-          {product.title}
+          {product.name}
         </Link>
         <Rating rate={product.rating.rate} count={product.rating.count} />
         <div className="mt-auto pt-2 flex items-center justify-between">

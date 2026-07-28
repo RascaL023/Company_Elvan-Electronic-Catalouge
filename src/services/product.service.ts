@@ -4,7 +4,7 @@ import { SortOption } from '../core/types/common';
 export function filterByQuery(products: Product[], query: string): Product[] {
   if (!query.trim()) return products;
   const q = query.toLowerCase();
-  return products.filter((p) => p.title.toLowerCase().includes(q));
+  return products.filter((p) => p.name.toLowerCase().includes(q));
 }
 
 export function filterByCategory(
