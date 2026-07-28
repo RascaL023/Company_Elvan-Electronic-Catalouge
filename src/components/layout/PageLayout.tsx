@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import { CartDrawer } from '../../features/cart/CartDrawer';
 
 export function PageLayout() {
   return (
@@ -11,7 +10,6 @@ export function PageLayout() {
         <Outlet />
       </main>
       <Footer />
-      <CartDrawer />
     </div>
   );
 }

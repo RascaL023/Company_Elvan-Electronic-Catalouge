@@ -1,29 +1,13 @@
-import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProduct } from '../../hooks/useProduct';
-import { useCart } from '../../hooks/useCart';
 import { formatPrice } from '../../utils/formatters';
 import { Rating } from '../../components/ui/Rating';
-import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { ErrorState } from '../../components/feedback/ErrorState';
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { product, loading, error } = useProduct(id!);
-  const { addToCart, items } = useCart();
-  const [added, setAdded] = useState(false);
-
-  const cartItem = product
-    ? items.find((i) => i.product.id === product.id)
-    : null;
-
-  const handleAddToCart = () => {
-    if (!product) return;
-    addToCart(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  };
 
   if (loading) {
     return (
@@ -89,16 +73,9 @@ export function ProductDetailPage() {
             {product.description}
           </p>
           <div className="border-t border-gray-100 pt-6 mt-2">
-            <div className="text-4xl font-bold text-indigo-600 mb-6">
+            <div className="text-4xl font-bold text-indigo-600">
               {formatPrice(product.price)}
             </div>
-            <Button onClick={handleAddToCart} size="lg" className="w-full sm:w-auto">
-              {added
-                ? 'Added!'
-                : cartItem
-                  ? `Add Again (${cartItem.quantity} in cart)`
-                  : 'Add to Cart'}
-            </Button>
           </div>
         </div>
       </div>

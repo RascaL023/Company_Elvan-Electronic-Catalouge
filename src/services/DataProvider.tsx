@@ -1,30 +1,23 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { ProductRepository } from '../core/repositories/product.repository';
-import { CartRepository } from '../core/repositories/cart.repository';
 
 interface DataContextValue {
   productRepository: ProductRepository;
-  cartRepository: CartRepository;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
 
 interface DataProviderProps {
-  repositories: {
-    product: ProductRepository;
-    cart: CartRepository;
-  };
+  productRepository: ProductRepository;
   children: ReactNode;
 }
 
-export function DataProvider({ repositories, children }: DataProviderProps) {
+export function DataProvider({
+  productRepository,
+  children,
+}: DataProviderProps) {
   return (
-    <DataContext.Provider
-      value={{
-        productRepository: repositories.product,
-        cartRepository: repositories.cart,
-      }}
-    >
+    <DataContext.Provider value={{ productRepository }}>
       {children}
     </DataContext.Provider>
   );

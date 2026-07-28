@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal';
-import { Button } from '../../components/ui/Button';
 import { Rating } from '../../components/ui/Rating';
 import { Product } from '../../core/types/product';
-import { useCart } from '../../hooks/useCart';
 import { formatPrice } from '../../utils/formatters';
 
 interface ProductModalProps {
@@ -12,13 +10,6 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ product, onClose }: ProductModalProps) {
-  const { addToCart } = useCart();
-
-  const handleAddToCart = () => {
-    addToCart(product);
-    onClose();
-  };
-
   return (
     <Modal open={true} onClose={onClose}>
       <div className="relative">
@@ -60,18 +51,17 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             <p className="text-gray-600 text-sm leading-relaxed">
               {product.description}
             </p>
-            <Link
-              to={`/product/${product.id}`}
-              onClick={onClose}
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-            >
-              View Full Details &rarr;
-            </Link>
             <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
               <span className="text-3xl font-bold text-indigo-600">
                 {formatPrice(product.price)}
               </span>
-              <Button onClick={handleAddToCart}>Add to Cart</Button>
+              <Link
+                to={`/product/${product.id}`}
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+              >
+                Detail
+              </Link>
             </div>
           </div>
         </div>

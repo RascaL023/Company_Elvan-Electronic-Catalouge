@@ -1,3 +1,3 @@
 export function formatPrice(price: number): string {
-  return `$${price.toFixed(2)}`;
+  return `Rp${price.toLocaleString('id-ID')}`;
 }
