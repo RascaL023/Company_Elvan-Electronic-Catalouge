@@ -1,8 +1,10 @@
-# Architecture — ElectroShop
+# Architecture — Elvan Electronic
 
 ## Overview
 
-ElectroShop uses a **three-layer architecture** with clear separation between UI, business logic, and data access. The core design principle is **database-agnostic**: all data access goes through repository interfaces, making it trivial to swap data sources (FakeStoreAPI, Firebase, Supabase, PostgreSQL, etc.) without touching UI or business logic.
+This project uses a **three-layer architecture** for clarity, testability, and easy migration. All data access goes through repository interfaces. All image URLs are resolved using an abstraction layer, so the UI never cares where images are stored. There is zero coupling to any backend, storage, or image hosting solution.
+
+There is a minimal Admin area for product CRUD (create, update, delete) and image key management. Images are referred to by key only (not URLs), so the system is ready for local/public folder or migration to Cloudflare R2 (or any object storage/backend).
 
 ## Folder Structure
 
@@ -16,194 +18,150 @@ src/
 ├── core/                          # Domain — zero external dependencies
 │   ├── types/
 │   │   ├── product.ts             # Product entity
-│   │   ├── cart.ts                # CartItem entity
-│   │   └── common.ts              # SortOption, AsyncState<T>
+│   │   ├── category.ts            # Category entity
+│   │   └── common.ts              # SortOption, etc
 │   └── repositories/
-│       ├── product.repository.ts  # ProductRepository interface
-│       └── cart.repository.ts     # CartRepository interface
+│       ├── product.repository.ts  # ProductRepository interface (+CRUD)
+│       └── category.repository.ts # CategoryRepository interface
 │
 ├── data/                          # Concrete implementations — swappable
-│   ├── fakestore/
-│   │   ├── fakestore.mapper.ts                 # API → domain transformer
-│   │   └── fakestore-product.repository.ts     # ProductRepository impl
-│   └── local/
-│       └── local-cart.repository.ts            # CartRepository impl (localStorage)
+│   └── mock/                      # In-memory mock for demo/development
+│       ├── mock-product.repository.ts
+│       └── mock-category.repository.ts
 │
 ├── services/
 │   ├── DataProvider.tsx           # Context: injects repository instances
-│   ├── UiProvider.tsx             # Context: global UI state (drawer, etc.)
-│   └── product.service.ts         # Pure functions: filter, sort, search
+│   ├── product.service.ts         # Pure functions: filter, sort, search
+│   └── imageService.ts            # Image URL resolver/abstraction
+│
+├── config/
+│   └── storage.ts                 # Storage provider config/env util
 │
 ├── hooks/
 │   ├── useRepository.ts           # Consumes DataProvider context
-│   ├── useProducts.ts             # Async fetch + filter + sort
-│   ├── useProduct.ts              # Single product by ID
-│   ├── useCart.ts                 # Cart state + persistence
-│   └── useDebounce.ts             # Input debounce utility
+│   ├── useProducts.ts             # Fetch + filter + sort
+│   └── useProduct.ts              # Single product by ID
 │
 ├── components/
 │   ├── ui/                        # Primitive, reusable UI atoms
-│   │   ├── Button.tsx
-│   │   ├── Badge.tsx
-│   │   ├── Rating.tsx
-│   │   ├── Skeleton.tsx
-│   │   ├── Modal.tsx
-│   │   ├── Drawer.tsx
-│   │   └── SearchBar.tsx
 │   ├── layout/                    # Page structure components
-│   │   ├── Header.tsx
-│   │   ├── Footer.tsx
-│   │   └── PageLayout.tsx
 │   └── feedback/                  # User feedback states
-│       ├── ErrorState.tsx
-│       ├── EmptyState.tsx
-│       └── LoadingGrid.tsx
 │
 ├── features/                      # Feature-specific composites
-│   ├── products/
-│   │   ├── ProductCard.tsx
-│   │   ├── ProductGrid.tsx
-│   │   ├── SortControl.tsx
-│   │   ├── ProductModal.tsx
-│   │   └── ProductsPage.tsx       # Route: /
-│   ├── product-detail/
-│   │   └── ProductDetailPage.tsx   # Route: /product/:id
-│   └── cart/
-│       ├── CartDrawer.tsx          # Slide-out panel
-│       ├── CartItemRow.tsx
-│       ├── CartSummary.tsx
-│       └── CartPage.tsx            # Route: /cart
+│   ├── products/                  # Catalog grid, UI, modal, etc.
+│   ├── product-detail/            # Product detail page
+│   └── admin/                     # Admin CRUD (dashboard, form, layout)
 │
 ├── utils/
-│   └── formatters.ts
-├── main.tsx
-└── index.css
+│   ├── formatters.ts              # Currency, etc.
+│   └── categories.ts              # Localized category name mapping
+└── main.tsx
 ```
 
-## Data Flow
+## Data & Image Flow
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│  providers.tsx                                            │
-│  ┌────────────────────────────────────────────────────┐   │
-│  │  repositories = { product: FakeStoreProductRepo,   │   │
-│  │                   cart: LocalCartRepo }             │   │
-│  └────────────────────────┬───────────────────────────┘   │
-│                           │ context                        │
-│  ┌────────────────────────▼───────────────────────────┐   │
-│  │  Hooks (useProducts, useProduct, useCart)          │   │
-│  │  Called by feature components                      │   │
-│  └────────────────────────┬───────────────────────────┘   │
-│                           │ repository interface           │
-│  ┌────────────────────────▼───────────────────────────┐   │
-│  │  Repository Implementation                          │   │
-│  │  FakeStoreProductRepository / LocalCartRepository   │   │
-│  └────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  providers.tsx                                              │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  repositories = { product: MockProductRepo, ... }     │  │
+│  └───────────────┬───────────────────────────────────────┘  │
+│                  │ context                                  │
+│  ┌───────────────▼───────────────────────────────────────┐  │
+│  │  Hooks (useProducts, useProduct, ...)                 │  │
+│  │  Called by feature components                         │  │
+│  └───────────────┬───────────────────────────────────────┘  │
+│                  │ repository interface                     │
+│  ┌───────────────▼───────────────────────────────────────┐  │
+│  │  Repository Implementation (mock, api, firestore)     │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                  │ image key                               │
+│  ┌───────────────▼─────────────────────────────┐           │
+│  │  imageService (getImageUrl, etc)            │           │
+│  │  Converts image key → public URL             │           │
+│  └─────────────────────────────────────────────┘           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Layer Rules
-
-| Layer | Can import from | Cannot import from |
-|-------|----------------|-------------------|
-| `core/` | Nothing | Any other layer |
-| `data/` | `core/` | `components/`, `features/` |
-| `services/` | `core/` | `data/`, `components/`, `features/` |
-| `hooks/` | `services/`, `core/` | `components/`, `features/` |
-| `components/` | `core/`, `hooks/` | `data/` |
-| `features/` | `components/`, `hooks/`, `core/` | `data/` |
-| `app/` | Everything | — |
+- UI **never knows** image storage location. Always calls `getImageUrl(key)` / `ImageService`.
+- Product data (including image) comes from repository, not directly via Firestore/API.
+- Migrasi image storage hanya perlu ganti config/env di storage.ts, bukan rewrite frontend.
 
 ## Repository Interfaces
 
-### ProductRepository
-
+### ProductRepository (current)
 ```typescript
-interface ProductRepository {
+import { Product } from '../types/product';
+export type ProductPayload = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+export interface ProductRepository {
   getAll(): Promise<Product[]>;
   getById(id: string): Promise<Product | null>;
+  create(payload: ProductPayload): Promise<Product>;
+  update(id: string, payload: Partial<ProductPayload>): Promise<Product>;
+  delete(id: string): Promise<void>;
 }
 ```
 
-### CartRepository
-
+### CategoryRepository
 ```typescript
-interface CartRepository {
-  load(): Promise<CartItem[]>;
-  save(items: CartItem[]): Promise<void>;
+export interface CategoryRepository {
+  getAll(): Promise<Category[]>;
+  getById(id: string): Promise<Category | null>;
 }
 ```
 
-## How to Add a New Data Source
+## Image Storage Abstraction
 
-### Example: Adding Firebase
+- Image disimpan di `public/assets/images/products/...` (local dev/demo)
+- Product hanya simpan array string image keys, misal `assets/images/products/refrigator/Kulkas1.webp`
+- Saat migrasi ke R2/cloud: upload file ke bucket, pakai key sama
+- `storage.ts` + config/env akan resolve ke URL lokal atau CDN sesuai mode
+- Semua akses image di UI selalu lewat `ImageService` / `getImageUrl`, tidak pernah hardcoded.
+- Produk tetap portable, migrasi semudah ganti config/env
 
-1. Create a new file `src/data/firebase/firebase-product.repository.ts`:
+## Admin CRUD (fitur minimal/MVP)
 
-```typescript
-import { ProductRepository } from '../../core/repositories/product.repository';
-import { Product } from '../../core/types/product';
+- /admin           — dashboard, list produk, tombol edit/hapus, tombol tambah
+- /admin/products/new       — tambah produk
+- /admin/products/:id/edit — edit produk
+- Form complete: semua field, images (array key, manual input, reorder, set primary)
+- Tidak ada upload gambar (image key manual, siap migrasi)
+- Semua operasi CRUD lewat repository
+- Fitur advanced (upload image, auth, kategori CRUD, dll) siap untuk backward-compatible penambahan
 
-export class FirebaseProductRepository implements ProductRepository {
-  async getAll(): Promise<Product[]> {
-    // Firebase/Firestore fetch logic
-    const snapshot = await getDocs(collection(db, 'products'));
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-  }
+## Routing
 
-  async getById(id: string): Promise<Product | null> {
-    const doc = await getDoc(doc(db, 'products', id));
-    if (!doc.exists()) return null;
-    return { id: doc.id, ...doc.data() } as Product;
-  }
-}
-```
+| Path                        | Page / Feature                 |
+|-----------------------------|--------------------------------|
+| /                           | Katalog produk                 |
+| /product/:id                | Halaman detail                 |
+| /admin                      | Dashboard admin (produk)       |
+| /admin/products/new         | Tambah produk                  |
+| /admin/products/:id/edit    | Edit produk                    |
+| *                           | 404                            |
 
-2. Swap in `src/app/providers.tsx`:
+## Migrasi dan Integrasi
 
-```typescript
-const repositories = {
-  product: new FirebaseProductRepository(),  // ← only change needed
-  cart: new LocalCartRepository(),
-};
-```
-
-**Zero changes** in hooks, components, features, or pages.
-
-## Migrating from FakeStoreAPI to Any Backend
-
-| What changes | What stays the same |
-|-------------|-------------------|
-| `src/data/{source}/` — new repository implementation | All `core/` types and interfaces |
-| One line in `src/app/providers.tsx` | All `hooks/` |
-| | All `components/` |
-| | All `features/` |
-| | All `services/` |
-| | Router and pages |
-
-## Routes
-
-| Path | Page | Description |
-|------|------|-------------|
-| `/` | `ProductsPage` | Product catalog with search, sort, grid |
-| `/product/:id` | `ProductDetailPage` | Full product detail page |
-| `/cart` | `CartPage` | Full cart management |
-| `*` | `NotFoundPage` | 404 |
+- Untuk ganti backend (misal dari mock → Firebase/REST), cukup buat class baru (implementasi `ProductRepository`), dan swap di `providers.tsx`:
+  ```ts
+  const productRepository = new FirebaseProductRepository(); // atau ApiProductRepository
+  ```
+- Tidak perlu ubah UI, service, atau form admin.
+- Untuk storage migrasi: image key tetap (termasuk subfolder/category), hanya upload ke cloud dan ganti config/env
 
 ## Tech Stack
-
 - **React 18** — UI library
-- **TypeScript** — Type safety
-- **Vite 5** — Build tool
-- **Tailwind CSS 3** — Styling
-- **React Router 6** — Client-side routing
-- **Zero heavy UI libraries** — All components hand-built with Tailwind
+- **TypeScript** — Type safety everywhere
+- **Vite 5** — Dev/build tool
+- **Tailwind CSS 3** — Atomic CSS styling
+- **React Router 6** — Routing
+- **Zero UI frameworks** — Semua komponen atom/molekul mandiri
 
 ## Development
 
 ```bash
 npm install
-npm run dev      # Development server
+npm run dev      # Jalankan dev server
 npm run build    # TypeScript check + production build
-npm run preview  # Preview production build
+npm run preview  # Preview
 ```
