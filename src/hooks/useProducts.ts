@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Product } from '../core/types/product';
 import { SortOption } from '../core/types/common';
 import { useRepository } from './useRepository';
-import { filterProducts, sortProducts } from '../services/product.service';
+import {
+  filterByQuery,
+  filterByCategory,
+  sortProducts,
+} from '../services/product.service';
 
 interface UseProductsReturn {
   products: Product[];
@@ -13,7 +17,8 @@ interface UseProductsReturn {
 
 export function useProducts(
   searchQuery: string,
-  sortOption: SortOption
+  sortOption: SortOption,
+  categorySlug: string | null = null
 ): UseProductsReturn {
   const { productRepository } = useRepository();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -40,10 +45,11 @@ export function useProducts(
   }, [load]);
 
   const products = useMemo(() => {
-    let result = filterProducts(allProducts, searchQuery);
+    let result = filterByCategory(allProducts, categorySlug);
+    result = filterByQuery(result, searchQuery);
     result = sortProducts(result, sortOption);
     return result;
-  }, [allProducts, searchQuery, sortOption]);
+  }, [allProducts, searchQuery, sortOption, categorySlug]);
 
   return { products, loading, error, refetch: load };
 }

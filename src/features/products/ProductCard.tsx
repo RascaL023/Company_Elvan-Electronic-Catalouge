@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Product } from '../../core/types/product';
 import { formatPrice } from '../../utils/formatters';
+import { getCategoryName } from '../../utils/categories';
 import { Rating } from '../../components/ui/Rating';
 
 interface ProductCardProps {
@@ -24,7 +25,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
       </Link>
       <div className="p-4 flex flex-col flex-1 gap-2">
         <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full self-start uppercase tracking-wide">
-          {product.category}
+          {getCategoryName(product.category)}
         </span>
         <Link
           to={`/product/${product.id}`}

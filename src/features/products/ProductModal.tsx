@@ -3,6 +3,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Rating } from '../../components/ui/Rating';
 import { Product } from '../../core/types/product';
 import { formatPrice } from '../../utils/formatters';
+import { getCategoryName } from '../../utils/categories';
 
 interface ProductModalProps {
   product: Product;
@@ -42,7 +43,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           </div>
           <div className="md:w-1/2 p-6 md:p-8 flex flex-col gap-4">
             <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full self-start uppercase tracking-wide">
-              {product.category}
+              {getCategoryName(product.category)}
             </span>
             <h2 className="text-xl font-bold text-gray-900 leading-tight">
               {product.title}

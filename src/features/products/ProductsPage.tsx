@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Product } from '../../core/types/product';
 import { SortOption } from '../../core/types/common';
 import { useProducts } from '../../hooks/useProducts';
+import { useCategories } from '../../hooks/useCategories';
 import { useDebounce } from '../../hooks/useDebounce';
 import { ProductGrid } from './ProductGrid';
 import { SortControl } from './SortControl';
@@ -14,12 +15,15 @@ export function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') || '';
   const sort = (searchParams.get('sort') as SortOption) || 'default';
+  const category = searchParams.get('category') || null;
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  const { categories } = useCategories();
   const debouncedSearch = useDebounce(search, 300);
   const { products, loading, error, refetch } = useProducts(
     debouncedSearch,
-    sort
+    sort,
+    category
   );
 
   const handleSortChange = (value: SortOption) => {
@@ -30,18 +34,52 @@ export function ProductsPage() {
     });
   };
 
+  const handleCategoryChange = (slug: string | null) => {
+    setSearchParams((prev) => {
+      if (slug) prev.set('category', slug);
+      else prev.delete('category');
+      return prev;
+    });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Electronics</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Elektronik</h1>
           <p className="text-gray-500 text-sm mt-1">
             {loading
               ? 'Loading...'
-              : `${products.length} products available`}
+              : `${products.length} produk tersedia`}
           </p>
         </div>
         <SortControl value={sort} onChange={handleSortChange} />
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-8">
+        <button
+          onClick={() => handleCategoryChange(null)}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            !category
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Semua
+        </button>
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => handleCategoryChange(cat.slug)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              category === cat.slug
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {cat.name}
+          </button>
+        ))}
       </div>
 
       {error ? (
