@@ -1,4 +1,4 @@
-import { ProductRepository } from '../../core/repositories/product.repository';
+import { ProductRepository, ProductPayload } from '../../core/repositories/product.repository';
 import { Product } from '../../core/types/product';
 
 const mockProducts: Product[] = [
@@ -88,6 +88,10 @@ const mockProducts: Product[] = [
   },
 ];
 
+function generateId(): string {
+  return `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
 export class MockProductRepository implements ProductRepository {
   async getAll(): Promise<Product[]> {
     const data = [...mockProducts];
@@ -97,5 +101,40 @@ export class MockProductRepository implements ProductRepository {
   async getById(id: string): Promise<Product | null> {
     const product = mockProducts.find((p) => p.id === id);
     return product || null;
+  }
+
+  async create(payload: ProductPayload): Promise<Product> {
+    const now = new Date().toISOString();
+    const product: Product = {
+      ...payload,
+      id: generateId(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    mockProducts.push(product);
+    return product;
+  }
+
+  async update(id: string, payload: Partial<ProductPayload>): Promise<Product> {
+    const index = mockProducts.findIndex((p) => p.id === id);
+    if (index === -1) {
+      throw new Error(`Product with id "${id}" not found`);
+    }
+    const updated: Product = {
+      ...mockProducts[index],
+      ...payload,
+      id,
+      updatedAt: new Date().toISOString(),
+    };
+    mockProducts[index] = updated;
+    return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    const index = mockProducts.findIndex((p) => p.id === id);
+    if (index === -1) {
+      throw new Error(`Product with id "${id}" not found`);
+    }
+    mockProducts.splice(index, 1);
   }
 }

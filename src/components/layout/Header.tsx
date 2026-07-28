@@ -27,6 +27,12 @@ export function Header() {
           <div className="flex-1 flex justify-center">
             <SearchBar value={search} onChange={handleSearchChange} />
           </div>
+          <Link
+            to="/admin"
+            className="text-sm text-gray-400 hover:text-indigo-600 transition-colors shrink-0"
+          >
+            Admin
+          </Link>
         </div>
       </div>
     </header>
