@@ -1,4 +1,5 @@
 import { getImageUrl, getImageUrlList, getPrimaryImageUrl, getThumbnailUrl, getMediumImageUrl, getDetailImageUrl } from '../utils/imageUrl';
+import { storageConfig } from '../config/storage';
 
 /**
  * Image Service
@@ -58,7 +59,7 @@ export const ImageService = {
    */
   getProductImageUrls(images: string[], size: 'thumbnail' | 'medium' | 'detail' | 'original' = 'medium'): string[] {
     if (!images || images.length === 0) {
-      return ['/images/placeholder.jpg'];
+      return [storageConfig.placeholderImageUrl];
     }
 
     const transformMap = {

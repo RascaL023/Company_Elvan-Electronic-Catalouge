@@ -1,5 +1,6 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { SearchBar } from '../ui/SearchBar';
+import { storageConfig } from '../../config/storage';
 
 export function Header() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,7 +23,7 @@ export function Header() {
             to="/"
             className="text-xl font-bold text-indigo-600 shrink-0"
           >
-            Elvan Electronic
+            {storageConfig.storeName}
           </Link>
           <div className="flex-1 flex justify-center">
             <SearchBar value={search} onChange={handleSearchChange} />

@@ -37,10 +37,16 @@ function getS3Url(key: string): string {
     return `${cdnBaseUrl.replace(/\/$/, '')}/${key}`;
   }
   
-  // Default S3 URL pattern
-  const bucket = s3Bucket || 'your-bucket';
-  const region = s3Region || 'us-east-1';
-  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  // Require bucket/region configuration for non-CDN S3
+  if (!s3Bucket || !s3Region) {
+    console.warn(
+      `[ImageResolver] S3 storage selected but VITE_S3_BUCKET or VITE_S3_REGION is not set. ` +
+      `Falling back to local asset path.`
+    );
+    return getLocalAssetPath(key);
+  }
+  
+  return `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${key}`;
 }
 
 /**
@@ -54,10 +60,16 @@ function getCloudflareUrl(key: string): string {
     return `${cdnBaseUrl.replace(/\/$/, '')}/${key}`;
   }
   
-  // Default R2 URL pattern (uses custom domain or r2.dev)
-  const accountId = cloudflareAccountId || 'your-account-id';
-  const bucket = cloudflareBucket || 'your-bucket';
-  return `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${key}`;
+  // Require account/bucket configuration for non-CDN R2
+  if (!cloudflareAccountId || !cloudflareBucket) {
+    console.warn(
+      `[ImageResolver] Cloudflare R2 storage selected but VITE_CLOUDFLARE_ACCOUNT_ID or ` +
+      `VITE_CLOUDFLARE_BUCKET is not set. Falling back to local asset path.`
+    );
+    return getLocalAssetPath(key);
+  }
+  
+  return `https://${cloudflareAccountId}.r2.cloudflarestorage.com/${cloudflareBucket}/${key}`;
 }
 
 /**
@@ -65,13 +77,21 @@ function getCloudflareUrl(key: string): string {
  */
 function getCloudinaryUrl(key: string, options?: { width?: number; height?: number; quality?: string }): string {
   const { cloudinaryCloudName } = storageConfig;
-  const cloudName = cloudinaryCloudName || 'your-cloud-name';
+  
+  // Require cloud name configuration
+  if (!cloudinaryCloudName) {
+    console.warn(
+      `[ImageResolver] Cloudinary storage selected but VITE_CLOUDINARY_CLOUD_NAME is not set. ` +
+      `Falling back to local asset path.`
+    );
+    return getLocalAssetPath(key);
+  }
   
   // Cloudinary uses public IDs without extension
   // The key might already be a public ID (without extension)
   const publicId = key.replace(/\.[^.]+$/, ''); // Remove extension if present
   
-  let url = `https://res.cloudinary.com/${cloudName}/image/upload/`;
+  let url = `https://res.cloudinary.com/${cloudinaryCloudName}/image/upload/`;
   
   // Add transformations if provided
   if (options?.width || options?.height || options?.quality) {
@@ -101,7 +121,7 @@ function getCloudinaryUrl(key: string, options?: { width?: number; height?: numb
  */
 export function getImageUrl(key: string, options?: { width?: number; height?: number; quality?: string }): string {
   if (!key) {
-    return '/images/placeholder.jpg';
+    return storageConfig.placeholderImageUrl;
   }
   
   // If it's already a full URL, return as-is
@@ -142,7 +162,7 @@ export function getImageUrl(key: string, options?: { width?: number; height?: nu
  */
 export function getImageUrlList(keys: string[], options?: { width?: number; height?: number; quality?: string }): string[] {
   if (!keys || keys.length === 0) {
-    return ['/images/placeholder.jpg'];
+    return [storageConfig.placeholderImageUrl];
   }
   return keys.map(key => getImageUrl(key, options));
 }
@@ -153,7 +173,7 @@ export function getImageUrlList(keys: string[], options?: { width?: number; heig
  */
 export function getPrimaryImageUrl(images: string[], options?: { width?: number; height?: number; quality?: string }): string {
   if (!images || images.length === 0) {
-    return '/images/placeholder.jpg';
+    return storageConfig.placeholderImageUrl;
   }
   return getImageUrl(images[0], options);
 }

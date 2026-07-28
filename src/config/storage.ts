@@ -18,6 +18,8 @@ export type StorageProvider = 'local' | 's3' | 'cloudflare' | 'cloudinary';
 export interface StorageConfig {
   provider: StorageProvider;
   cdnBaseUrl: string;
+  placeholderImageUrl: string;
+  storeName: string;
   // S3 specific
   s3Bucket?: string;
   s3Region?: string;
@@ -38,6 +40,8 @@ function getEnvVar(key: string, defaultValue = ''): string {
 export const storageConfig: StorageConfig = {
   provider: (getEnvVar('VITE_STORAGE_PROVIDER') as StorageProvider) || 'local',
   cdnBaseUrl: getEnvVar('VITE_CDN_BASE_URL', ''),
+  placeholderImageUrl: getEnvVar('VITE_PLACEHOLDER_IMAGE_URL', '/images/placeholder.jpg'),
+  storeName: getEnvVar('VITE_STORE_NAME', 'Elvan Electronic'),
   s3Bucket: getEnvVar('VITE_S3_BUCKET'),
   s3Region: getEnvVar('VITE_S3_REGION'),
   cloudflareAccountId: getEnvVar('VITE_CLOUDFLARE_ACCOUNT_ID'),
