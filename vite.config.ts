@@ -9,6 +9,16 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [react()],
+        build: {
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        vendor: ['react', 'react-dom', 'react-router-dom'],
+                        firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth'],
+                    },
+                },
+            },
+        },
         server: {
             host: '0.0.0.0',
             allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined
