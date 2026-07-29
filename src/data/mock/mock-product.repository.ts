@@ -1,5 +1,11 @@
-import { ProductRepository, ProductPayload } from '../../core/repositories/product.repository';
+import {
+  ProductRepository,
+  ProductPayload,
+  ProductListOptions,
+  ProductListResult,
+} from '../../core/repositories/product.repository';
 import { Product } from '../../core/types/product';
+import { SortOption } from '../../core/types/common';
 
 const mockProducts: Product[] = [
   {
@@ -92,10 +98,68 @@ function generateId(): string {
   return `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
+const DEFAULT_LIMIT = 24;
+
+function sortProducts(products: Product[], sort: SortOption): Product[] {
+  const sorted = [...products];
+  switch (sort) {
+    case 'price-asc':
+      sorted.sort((a, b) => a.price - b.price);
+      break;
+    case 'price-desc':
+      sorted.sort((a, b) => b.price - a.price);
+      break;
+    case 'rating-desc':
+      sorted.sort((a, b) => b.rating.rate - a.rating.rate);
+      break;
+    default:
+      sorted.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  }
+  return sorted;
+}
+
 export class MockProductRepository implements ProductRepository {
   async getAll(): Promise<Product[]> {
     const data = [...mockProducts];
     return data;
+  }
+
+  async list(options: ProductListOptions = {}): Promise<ProductListResult> {
+    const { category, sort, search, cursor } = options;
+    const pageSize = options.limit ?? DEFAULT_LIMIT;
+
+    let result = mockProducts.filter((p) => p.isActive);
+
+    if (category) {
+      result = result.filter((p) => p.category === category);
+    }
+
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q));
+    }
+
+    result = sortProducts(result, sort ?? 'default');
+
+    let startIndex = 0;
+    if (cursor) {
+      const cursorIndex = result.findIndex((p) => p.id === cursor);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const paged = result.slice(startIndex, startIndex + pageSize);
+    const hasMore = startIndex + pageSize < result.length;
+
+    return {
+      products: paged,
+      hasMore,
+      cursor: paged.length > 0 ? paged[paged.length - 1].id : null,
+    };
   }
 
   async getById(id: string): Promise<Product | null> {

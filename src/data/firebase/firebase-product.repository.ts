@@ -7,14 +7,30 @@ import {
   updateDoc,
   deleteDoc,
   query,
+  where,
   orderBy,
+  limit,
+  startAfter,
+  QueryConstraint,
 } from 'firebase/firestore';
 import { getDb } from '../../config/firebase';
-import { ProductRepository, ProductPayload } from '../../core/repositories/product.repository';
+import {
+  ProductRepository,
+  ProductPayload,
+  ProductListOptions,
+  ProductListResult,
+} from '../../core/repositories/product.repository';
 import { Product } from '../../core/types/product';
 import { docToProduct } from './firebase-mapper';
 
 const COLLECTION = 'products';
+const DEFAULT_LIMIT = 24;
+
+const SORT_FIELDS: Record<string, [string, 'asc' | 'desc']> = {
+  'price-asc': ['price', 'asc'],
+  'price-desc': ['price', 'desc'],
+  'rating-desc': ['rating.rate', 'desc'],
+};
 
 export class FirebaseProductRepository implements ProductRepository {
   async getAll(): Promise<Product[]> {
@@ -23,6 +39,53 @@ export class FirebaseProductRepository implements ProductRepository {
       query(collection(db, COLLECTION), orderBy('createdAt', 'desc'))
     );
     return snapshot.docs.map(docToProduct);
+  }
+
+  async list(options: ProductListOptions = {}): Promise<ProductListResult> {
+    const db = getDb();
+    const { category, sort, search, cursor } = options;
+    const pageSize = options.limit ?? DEFAULT_LIMIT;
+
+    const constraints: QueryConstraint[] = [];
+    constraints.push(where('isActive', '==', true));
+
+    if (category) {
+      constraints.push(where('category', '==', category));
+    }
+
+    if (search) {
+      const q = search.toLowerCase();
+      constraints.push(where('name', '>=', q));
+      constraints.push(where('name', '<', q + '\uf8ff'));
+    } else if (sort && sort !== 'default') {
+      const [field, dir] = SORT_FIELDS[sort];
+      constraints.push(orderBy(field, dir));
+    } else {
+      constraints.push(orderBy('createdAt', 'desc'));
+    }
+
+    constraints.push(limit(pageSize));
+
+    if (cursor) {
+      const cursorRef = doc(db, COLLECTION, cursor);
+      const cursorSnap = await getDoc(cursorRef);
+      if (cursorSnap.exists()) {
+        constraints.push(startAfter(cursorSnap));
+      }
+    }
+
+    const snapshot = await getDocs(
+      query(collection(db, COLLECTION), ...constraints)
+    );
+
+    const docs = snapshot.docs;
+    const hasMore = docs.length === pageSize;
+
+    return {
+      products: docs.map(docToProduct),
+      hasMore,
+      cursor: docs.length > 0 ? docs[docs.length - 1].id : null,
+    };
   }
 
   async getById(id: string): Promise<Product | null> {

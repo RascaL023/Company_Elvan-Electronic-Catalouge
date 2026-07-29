@@ -20,11 +20,15 @@ export function ProductsPage() {
 
   const { categories } = useCategories();
   const debouncedSearch = useDebounce(search, 300);
-  const { products, loading, error, refetch } = useProducts(
-    debouncedSearch,
-    sort,
-    category
-  );
+  const {
+    products,
+    loading,
+    loadingMore,
+    error,
+    hasMore,
+    loadMore,
+    refetch,
+  } = useProducts(debouncedSearch, sort, category);
 
   const handleSortChange = (value: SortOption) => {
     setSearchParams((prev) => {
@@ -45,14 +49,7 @@ export function ProductsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Elektronik</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {loading
-              ? 'Loading...'
-              : `${products.length} produk tersedia`}
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900">Elektronik</h1>
         <SortControl value={sort} onChange={handleSortChange} />
       </div>
 
@@ -87,11 +84,24 @@ export function ProductsPage() {
       ) : !loading && products.length === 0 ? (
         <EmptyState query={debouncedSearch} />
       ) : (
-        <ProductGrid
-          products={products}
-          loading={loading}
-          onQuickView={setSelectedProduct}
-        />
+        <>
+          <ProductGrid
+            products={products}
+            loading={loading}
+            onQuickView={setSelectedProduct}
+          />
+          {hasMore && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingMore ? 'Loading...' : 'Load More'}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {selectedProduct && (
