@@ -8,6 +8,7 @@ import {
   AdminDashboard,
   ProductForm,
 } from '../features/admin';
+import { LoginPage } from '../features/auth';
 
 export const router = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
       { path: '/product/:id', element: <ProductDetailPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
+  },
+  {
+    path: '/admin/login',
+    element: <LoginPage />,
   },
   {
     element: <AdminLayout />,

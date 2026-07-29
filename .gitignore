@@ -1,7 +1,9 @@
 .private
 .agents
+service-account.json
 
 ##### FIREBASE #####
+**.cache
 # firebase**
 # firestore**
 # .firebase**

@@ -1,7 +1,27 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 export function AdminLayout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { user, loading, logout } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/admin/login', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const navItems = [
     { to: '/admin', label: 'Products', exact: true },
@@ -38,12 +58,21 @@ export function AdminLayout() {
                 })}
               </nav>
             </div>
-            <Link
-              to="/"
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              View Site
-            </Link>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-400">{user.email}</span>
+              <button
+                onClick={logout}
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Logout
+              </button>
+              <Link
+                to="/"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                View Site
+              </Link>
+            </div>
           </div>
         </div>
       </header>
