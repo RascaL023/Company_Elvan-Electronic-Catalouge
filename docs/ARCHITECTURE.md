@@ -113,7 +113,7 @@ export interface CategoryRepository {
 ## Image Storage Abstraction
 
 - Image disimpan di `public/assets/images/products/...` (local dev/demo)
-- Product hanya simpan array string image keys, misal `assets/images/products/refrigator/Kulkas1.webp`
+- Product hanya simpan array string image keys, misal `assets/images/products/refrigerator/Kulkas1.webp`
 - Saat migrasi ke R2/cloud: upload file ke bucket, pakai key sama
 - `storage.ts` + config/env akan resolve ke URL lokal atau CDN sesuai mode
 - Semua akses image di UI selalu lewat `ImageService` / `getImageUrl`, tidak pernah hardcoded.

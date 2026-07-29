@@ -298,7 +298,7 @@ export function ProductForm() {
               <input
                 type="text"
                 value={key}
-                placeholder="e.g. assets/images/products/refrigator/image.jpg"
+                placeholder="e.g. assets/images/products/refrigerator/image.jpg"
                 onChange={(e) => handleImageChange(index, e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />

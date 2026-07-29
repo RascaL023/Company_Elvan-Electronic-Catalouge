@@ -10,7 +10,7 @@ const mockProducts: Product[] = [
     description:
       'Refrigerator Side by Side Samsung RS64R5331B4 dengan kapasitas 642L. Dilengkapi Digital Inverter Technology, Twin Cooling Plus, dan All-around Cooling. Memiliki fitur Ice Maker otomatis, display digital touch, dan pengaturan suhu presisi. Cocok untuk keluarga besar yang membutuhkan ruang penyimpanan maksimal dengan efisiensi energi tinggi.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigator/Kulkas1.webp'],
+    images: ['assets/images/products/refrigerator/Kulkas1.webp'],
     rating: { rate: 4.7, count: 234 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -24,7 +24,7 @@ const mockProducts: Product[] = [
     description:
       'Kulkas 2 Pintu LG GN-B215SQMT dengan kapasitas 215L. Teknologi Smart Inverter Compressor menjamin efisiensi energi dan ketahanan hingga 10 tahun garansi kompresor. Fitur Multi Air Flow memastikan suhu merata ke seluruh bagian kulkas. Desain elegan dengan interior LED yang hemat energi.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigator/Kulkas2.jpg'],
+    images: ['assets/images/products/refrigerator/Kulkas2.jpg'],
     rating: { rate: 4.5, count: 189 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -38,7 +38,7 @@ const mockProducts: Product[] = [
     description:
       'Kulkas 1 Pintu Sharp SJ-317MG kapasitas 170L dengan teknologi Pendingin Cepat yang mampu mendinginkan minuman dalam waktu singkat. Rak kaca tempered berkualitas tinggi, konsumsi daya rendah, dan kompresor hemat energi. Cocok untuk kebutuhan keluarga kecil, kos-kosan, atau sebagai kulkas tambahan.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigator/Kulkas3.jpg'],
+    images: ['assets/images/products/refrigerator/Kulkas3.jpg'],
     rating: { rate: 4.3, count: 156 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
