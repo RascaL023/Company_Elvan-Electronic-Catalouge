@@ -1,4 +1,11 @@
 .private
+.agents
+
+##### FIREBASE #####
+# firebase**
+# firestore**
+# .firebase**
+# skills-lock.json
 
 node_modules/
 dist/
