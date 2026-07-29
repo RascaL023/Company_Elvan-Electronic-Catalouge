@@ -15,7 +15,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
   const thumbnailUrl = ImageService.getThumbnailUrl(primaryImage);
 
   return (
-    <div className="bg-surface rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group border border-border">
+    <div className="bg-surface rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col group border border-border">
       <Link
         to={`/product/${product.id}`}
         className="aspect-square bg-surface-alt p-6 sm:p-8 flex items-center justify-center overflow-hidden"

@@ -27,6 +27,8 @@ export default {
           muted: 'var(--color-ink-muted)',
         },
         border: 'var(--color-border)',
+        link: 'var(--color-link)',
+        'btn-dark': 'var(--color-btn-dark)',
       },
     },
   },

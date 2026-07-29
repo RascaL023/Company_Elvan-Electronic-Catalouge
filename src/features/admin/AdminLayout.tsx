@@ -30,13 +30,13 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface-alt">
-      <header className="sticky top-0 z-40 bg-primary shadow">
+      <header className="sticky top-0 z-40 bg-surface border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-6">
               <Link
                 to="/admin"
-                className="text-lg font-bold text-primary-text tracking-tight"
+                className="text-lg font-bold text-primary tracking-tight"
               >
                 Admin Panel
               </Link>
@@ -51,8 +51,8 @@ export function AdminLayout() {
                       to={item.to}
                       className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                         active
-                          ? 'bg-white/10 text-primary-text'
-                          : 'text-primary-muted hover:text-primary-text hover:bg-white/5'
+                          ? 'bg-primary text-primary-text'
+                          : 'text-ink-secondary hover:text-ink hover:bg-surface-hover'
                       }`}
                     >
                       {item.label}
@@ -62,18 +62,18 @@ export function AdminLayout() {
               </nav>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-primary-muted">
+              <span className="text-sm text-ink-muted">
                 {user.email}
               </span>
               <button
                 onClick={logout}
-                className="text-sm text-primary-muted hover:text-primary-text transition-colors"
+                className="text-sm text-ink-muted hover:text-ink transition-colors"
               >
                 Logout
               </button>
               <Link
                 to="/"
-                className="text-sm text-primary-muted hover:text-primary-text transition-colors"
+                className="text-sm text-ink-muted hover:text-ink transition-colors"
               >
                 View Site
               </Link>

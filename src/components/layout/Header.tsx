@@ -18,24 +18,24 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-primary shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+    <header className="sticky top-0 z-40 bg-surface border-b border-border">
+      <div className="mx-auto px-6 sm:px-10 lg:px-16">
+        <div className="flex items-center justify-between h-20 gap-6">
           <Link to="/" className="shrink-0">
-            <div className="text-xl font-bold text-primary-text">
+            <div className="text-2xl font-bold text-primary tracking-tight">
               {storageConfig.storeName}
             </div>
-            <div className="text-xs text-primary-muted -mt-0.5">
+            <div className="text-sm text-ink-secondary -mt-0.5">
               {storageConfig.companyName}
             </div>
           </Link>
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 max-w-xl flex justify-center mx-auto">
             <SearchBar value={search} onChange={handleSearchChange} />
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={toggle}
-              className="p-2 text-primary-muted hover:text-primary-text transition-colors rounded-lg hover:bg-white/10"
+              className="p-2 text-ink-muted hover:text-ink-secondary transition-colors rounded-lg hover:bg-surface-hover"
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? (
@@ -48,12 +48,6 @@ export function Header() {
                 </svg>
               )}
             </button>
-            <Link
-              to="/admin"
-              className="text-sm text-primary-muted hover:text-primary-text transition-colors"
-            >
-              Admin
-            </Link>
           </div>
         </div>
       </div>

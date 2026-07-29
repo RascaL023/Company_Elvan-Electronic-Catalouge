@@ -8,7 +8,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
     <div className="relative w-full max-w-md">
       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
         <svg
-          className="w-5 h-5 text-ink-muted"
+          className="w-5 h-5 text-primary"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
