@@ -5,34 +5,39 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
   return (
-    <div className="relative w-full max-w-md">
-      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-        <svg
-          className="w-5 h-5 text-primary"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
-      </div>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Search products..."
-        className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg bg-surface text-ink placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-      />
-      {value && (
+    <div className="relative w-full max-w-md group">
+      <div className="flex items-center w-full border border-border rounded-full bg-surface focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all shadow-sm group-hover:shadow-md p-1">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Search products..."
+          className="flex-1 bg-transparent px-4 py-2 text-sm text-ink placeholder-ink-muted focus:outline-none"
+        />
+        {value && (
+          <button
+            onClick={() => onChange('')}
+            className="p-1 mr-1 text-ink-muted hover:text-ink-secondary transition-colors"
+            aria-label="Clear search"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
         <button
-          onClick={() => onChange('')}
-          className="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-muted hover:text-ink-secondary"
-          aria-label="Clear search"
+          className="w-10 h-10 flex items-center justify-center shrink-0 bg-primary text-primary-text rounded-full hover:bg-primary-dark transition-colors shadow-sm mr-1.5"
+          aria-label="Search"
         >
           <svg
             className="w-5 h-5"
@@ -44,11 +49,11 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
         </button>
-      )}
+      </div>
     </div>
   );
 }
