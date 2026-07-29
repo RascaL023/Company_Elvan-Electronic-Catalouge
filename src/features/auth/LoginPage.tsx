@@ -34,12 +34,12 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-xl shadow-2xl p-8">
+        <div className="bg-surface rounded-xl shadow-2xl p-8 border border-border">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold text-ink">Admin Login</h1>
+            <p className="text-sm text-ink-muted mt-1">
               Masuk untuk mengelola produk
             </p>
           </div>
@@ -54,7 +54,7 @@ export function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-ink-secondary mb-1"
               >
                 Email
               </label>
@@ -64,7 +64,7 @@ export function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder="admin@example.com"
               />
             </div>
@@ -72,7 +72,7 @@ export function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-ink-secondary mb-1"
               >
                 Password
               </label>
@@ -82,7 +82,7 @@ export function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder="••••••••"
               />
             </div>
@@ -90,7 +90,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className="w-full py-2.5 text-sm font-medium text-primary-text bg-primary rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
@@ -99,7 +99,7 @@ export function LoginPage() {
           <div className="mt-6 text-center">
             <Link
               to="/"
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-sm text-ink-muted hover:text-ink-secondary transition-colors"
             >
               ← Back to catalog
             </Link>

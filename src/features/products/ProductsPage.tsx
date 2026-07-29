@@ -48,8 +48,7 @@ export function ProductsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Elektronik</h1>
+      <div className="flex justify-end mb-6">
         <SortControl value={sort} onChange={handleSortChange} />
       </div>
 
@@ -58,8 +57,8 @@ export function ProductsPage() {
           onClick={() => handleCategoryChange(null)}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             !category
-              ? 'bg-indigo-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-primary text-primary-text'
+              : 'bg-surface-hover text-ink-secondary hover:bg-surface-hover'
           }`}
         >
           Semua
@@ -70,8 +69,8 @@ export function ProductsPage() {
             onClick={() => handleCategoryChange(cat.slug)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               category === cat.slug
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-primary-text'
+                : 'bg-surface-hover text-ink-secondary hover:bg-surface-hover'
             }`}
           >
             {cat.name}
@@ -95,7 +94,7 @@ export function ProductsPage() {
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-primary text-primary-text font-medium rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingMore ? 'Loading...' : 'Load More'}
               </button>

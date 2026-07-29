@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_STORE_NAME: string;
+  readonly VITE_COMPANY_NAME: string;
   readonly VITE_STORAGE_PROVIDER: string;
   readonly VITE_CDN_BASE_URL: string;
   readonly VITE_PLACEHOLDER_IMAGE_URL: string;

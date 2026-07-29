@@ -8,7 +8,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
     <div className="relative w-full max-w-md">
       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
         <svg
-          className="w-5 h-5 text-gray-400"
+          className="w-5 h-5 text-ink-muted"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -26,12 +26,12 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search products..."
-        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+        className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg bg-surface text-ink placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+          className="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-muted hover:text-ink-secondary"
           aria-label="Clear search"
         >
           <svg

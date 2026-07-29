@@ -15,7 +15,7 @@ export function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full" />
       </div>
     );
@@ -29,12 +29,15 @@ export function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="bg-gray-900 text-white">
+    <div className="min-h-screen flex flex-col bg-surface-alt">
+      <header className="sticky top-0 z-40 bg-primary shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-6">
-              <Link to="/admin" className="text-lg font-bold tracking-tight">
+              <Link
+                to="/admin"
+                className="text-lg font-bold text-primary-text tracking-tight"
+              >
                 Admin Panel
               </Link>
               <nav className="flex items-center gap-1">
@@ -48,8 +51,8 @@ export function AdminLayout() {
                       to={item.to}
                       className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                         active
-                          ? 'bg-white/10 text-white'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                          ? 'bg-white/10 text-primary-text'
+                          : 'text-primary-muted hover:text-primary-text hover:bg-white/5'
                       }`}
                     >
                       {item.label}
@@ -59,16 +62,18 @@ export function AdminLayout() {
               </nav>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-400">{user.email}</span>
+              <span className="text-sm text-primary-muted">
+                {user.email}
+              </span>
               <button
                 onClick={logout}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
+                className="text-sm text-primary-muted hover:text-primary-text transition-colors"
               >
                 Logout
               </button>
               <Link
                 to="/"
-                className="text-sm text-gray-400 hover:text-white transition-colors"
+                className="text-sm text-primary-muted hover:text-primary-text transition-colors"
               >
                 View Site
               </Link>

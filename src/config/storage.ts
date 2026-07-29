@@ -20,6 +20,7 @@ export interface StorageConfig {
   cdnBaseUrl: string;
   placeholderImageUrl: string;
   storeName: string;
+  companyName: string;
   // S3 specific
   s3Bucket?: string;
   s3Region?: string;
@@ -42,6 +43,7 @@ export const storageConfig: StorageConfig = {
   cdnBaseUrl: getEnvVar('VITE_CDN_BASE_URL', ''),
   placeholderImageUrl: getEnvVar('VITE_PLACEHOLDER_IMAGE_URL', '/images/placeholder.jpg'),
   storeName: getEnvVar('VITE_STORE_NAME', 'Elvan Electronic'),
+  companyName: getEnvVar('VITE_COMPANY_NAME', 'Kinarya Adika Askari'),
   s3Bucket: getEnvVar('VITE_S3_BUCKET'),
   s3Region: getEnvVar('VITE_S3_REGION'),
   cloudflareAccountId: getEnvVar('VITE_CLOUDFLARE_ACCOUNT_ID'),

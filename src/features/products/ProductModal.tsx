@@ -17,7 +17,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
       <div className="relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 bg-surface rounded-full shadow flex items-center justify-center text-ink-muted hover:text-ink-secondary transition-colors"
           aria-label="Close"
         >
           <svg
@@ -35,7 +35,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           </svg>
         </button>
         <div className="flex flex-col md:flex-row">
-          <div className="md:w-1/2 p-8 bg-gray-50 flex items-center justify-center">
+          <div className="md:w-1/2 p-8 bg-surface-alt flex items-center justify-center">
             <img
               src={ImageService.getDetailUrl(product.images[0] || '')}
               alt={product.name}
@@ -43,24 +43,24 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             />
           </div>
           <div className="md:w-1/2 p-6 md:p-8 flex flex-col gap-4">
-            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full self-start uppercase tracking-wide">
+            <span className="text-xs font-medium text-ink-secondary bg-surface-hover px-2 py-1 rounded-full self-start uppercase tracking-wide">
               {getCategoryName(product.category)}
             </span>
-            <h2 className="text-xl font-bold text-gray-900 leading-tight">
+            <h2 className="text-xl font-bold text-ink leading-tight">
               {product.name}
             </h2>
             <Rating rate={product.rating.rate} count={product.rating.count} />
-            <p className="text-gray-600 text-sm leading-relaxed">
+            <p className="text-ink-secondary text-sm leading-relaxed">
               {product.description}
             </p>
-            <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
-              <span className="text-3xl font-bold text-indigo-600">
+            <div className="mt-auto pt-4 flex items-center justify-between border-t border-border">
+              <span className="text-3xl font-bold text-primary">
                 {formatPrice(product.price)}
               </span>
               <Link
                 to={`/product/${product.id}`}
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-primary bg-primary-bg hover:bg-primary hover:text-primary-text rounded-lg transition-colors"
               >
                 Detail
               </Link>

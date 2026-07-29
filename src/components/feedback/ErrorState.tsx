@@ -21,13 +21,13 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
           />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <h3 className="text-lg font-semibold text-ink mb-2">
         Something went wrong
       </h3>
-      <p className="text-gray-500 mb-6 max-w-md">{message}</p>
+      <p className="text-ink-muted mb-6 max-w-md">{message}</p>
       <button
         onClick={onRetry}
-        className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+        className="px-6 py-2.5 bg-primary text-primary-text rounded-lg hover:bg-primary-dark transition-colors font-medium"
       >
         Try Again
       </button>

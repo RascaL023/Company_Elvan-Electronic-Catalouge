@@ -169,7 +169,7 @@ export function ProductForm() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-10 bg-gray-200 rounded-lg" />
+            <div key={i} className="h-10 bg-surface-hover rounded-lg" />
           ))}
         </div>
       </div>
@@ -178,7 +178,7 @@ export function ProductForm() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="text-2xl font-bold text-ink mb-6">
         {isEdit ? 'Edit Product' : 'New Product'}
       </h1>
 
@@ -189,8 +189,8 @@ export function ProductForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Basic Info</h2>
+        <div className="bg-surface rounded-lg border border-border p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-ink">Basic Info</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
@@ -201,7 +201,7 @@ export function ProductForm() {
                 required
                 value={form.name}
                 onChange={(e) => handleField('name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
 
@@ -216,7 +216,7 @@ export function ProductForm() {
                   setSlugManuallyEdited(true);
                   handleField('slug', e.target.value);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
 
@@ -229,7 +229,7 @@ export function ProductForm() {
                 min={0}
                 value={form.price}
                 onChange={(e) => handleField('price', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
 
@@ -240,7 +240,7 @@ export function ProductForm() {
                 required
                 value={form.category}
                 onChange={(e) => handleField('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 <option value="">Select category</option>
                 {categories.map((cat) => (
@@ -258,7 +258,7 @@ export function ProductForm() {
                 type="text"
                 value={form.brand}
                 onChange={(e) => handleField('brand', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
           </div>
@@ -270,55 +270,55 @@ export function ProductForm() {
               rows={4}
               value={form.description}
               onChange={(e) => handleField('description', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+        <div className="bg-surface rounded-lg border border-border p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Images</h2>
+            <h2 className="text-lg font-semibold text-ink">Images</h2>
             <button
               type="button"
               onClick={addImageField}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+              className="text-sm font-medium text-primary hover:text-primary-dark"
             >
               + Add Image
             </button>
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-ink-muted">
             First image is the primary. Drag via buttons to reorder.
           </p>
 
           {form.images.map((key, index) => (
             <div key={index} className="flex items-center gap-2">
-              <span className="text-xs font-mono text-gray-400 w-6 text-right shrink-0">
-                {index === 0 ? '★' : index}
+              <span className="text-xs font-mono text-ink-muted w-6 text-right shrink-0">
+                {index === 0 ? '\u2605' : index}
               </span>
               <input
                 type="text"
                 value={key}
                 placeholder="e.g. assets/images/products/refrigerator/image.jpg"
                 onChange={(e) => handleImageChange(index, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="flex-1 px-3 py-2 border border-border rounded-lg text-sm font-mono bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
               <button
                 type="button"
                 onClick={() => moveImage(index, 'up')}
                 disabled={index === 0}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
                 title="Move up"
               >
-                ↑
+                {'\u2191'}
               </button>
               <button
                 type="button"
                 onClick={() => moveImage(index, 'down')}
                 disabled={index === form.images.length - 1}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
                 title="Move down"
               >
-                ↓
+                {'\u2193'}
               </button>
               {form.images.length > 1 && (
                 <button
@@ -327,19 +327,19 @@ export function ProductForm() {
                   className="p-2 text-red-400 hover:text-red-600"
                   title="Remove"
                 >
-                  ×
+                  {'\u00d7'}
                 </button>
               )}
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Rating & Status</h2>
+        <div className="bg-surface rounded-lg border border-border p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-ink">Rating & Status</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="ratingRate">Rating (0–5)</Label>
+              <Label htmlFor="ratingRate">Rating (0\u20135)</Label>
               <input
                 id="ratingRate"
                 type="number"
@@ -348,7 +348,7 @@ export function ProductForm() {
                 step="0.1"
                 value={form.ratingRate}
                 onChange={(e) => handleField('ratingRate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
             <div>
@@ -359,7 +359,7 @@ export function ProductForm() {
                 min="0"
                 value={form.ratingCount}
                 onChange={(e) => handleField('ratingCount', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
             <div className="flex items-end pb-2">
@@ -368,9 +368,9 @@ export function ProductForm() {
                   type="checkbox"
                   checked={form.isActive}
                   onChange={(e) => handleField('isActive', e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-ink-secondary">
                   Active
                 </span>
               </label>
@@ -382,14 +382,14 @@ export function ProductForm() {
           <button
             type="button"
             onClick={() => navigate('/admin')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-ink-secondary bg-surface border border-border rounded-lg hover:bg-surface-hover transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            className="px-6 py-2 text-sm font-medium text-primary-text bg-primary rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : isEdit ? 'Update Product' : 'Create Product'}
           </button>
@@ -403,7 +403,7 @@ function Label({ htmlFor, children }: { htmlFor: string; children: string }) {
   return (
     <label
       htmlFor={htmlFor}
-      className="block text-sm font-medium text-gray-700 mb-1"
+      className="block text-sm font-medium text-ink-secondary mb-1"
     >
       {children}
     </label>
