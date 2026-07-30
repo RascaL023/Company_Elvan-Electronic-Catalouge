@@ -69,6 +69,7 @@ export function AdminCategoryList() {
   const tabs = [
     { label: 'Products', href: '/admin', active: false },
     { label: 'Categories', href: '/admin/categories', active: true },
+    { label: 'Brands', href: '/admin/brands', active: false },
   ];
 
   return (

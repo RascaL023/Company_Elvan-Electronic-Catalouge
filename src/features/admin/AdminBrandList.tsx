@@ -1,36 +1,34 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Product } from '../../core/types/product';
+import { Brand } from '../../core/types/brand';
 import { useRepository } from '../../hooks/useRepository';
-import { getCategoryName } from '../../utils/categories';
-import { formatPrice } from '../../utils/formatters';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 const PAGE_SIZE = 10;
 
-export function AdminDashboard() {
-  const { productRepository } = useRepository();
+export function AdminBrandList() {
+  const { brandRepository } = useRepository();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
-  const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await productRepository.getAll();
-      setProducts(data);
+      const data = await brandRepository.getAll();
+      setBrands(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load products');
+      setError(err instanceof Error ? err.message : 'Failed to load brands');
     } finally {
       setLoading(false);
     }
-  }, [productRepository]);
+  }, [brandRepository]);
 
   useEffect(() => {
     load();
@@ -41,16 +39,14 @@ export function AdminDashboard() {
   }, [searchQuery]);
 
   const filtered = useMemo(() => {
-    if (!searchQuery) return products;
+    if (!searchQuery) return brands;
     const q = searchQuery.toLowerCase();
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.slug.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        (p.brand && p.brand.toLowerCase().includes(q))
+    return brands.filter(
+      (b) =>
+        b.name.toLowerCase().includes(q) ||
+        b.slug.toLowerCase().includes(q)
     );
-  }, [products, searchQuery]);
+  }, [brands, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -58,23 +54,22 @@ export function AdminDashboard() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    const id = deleteTarget.id;
-    setDeletingId(id);
+    setDeleting(true);
     try {
-      await productRepository.delete(id);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      await brandRepository.delete(deleteTarget.id);
+      setBrands((prev) => prev.filter((b) => b.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete product');
+      alert(err instanceof Error ? err.message : 'Failed to delete brand');
     } finally {
-      setDeletingId(null);
+      setDeleting(false);
     }
   };
 
   const tabs = [
-    { label: 'Products', href: '/admin', active: true },
+    { label: 'Products', href: '/admin', active: false },
     { label: 'Categories', href: '/admin/categories', active: false },
-    { label: 'Brands', href: '/admin/brands', active: false },
+    { label: 'Brands', href: '/admin/brands', active: true },
   ];
 
   return (
@@ -98,11 +93,11 @@ export function AdminDashboard() {
 
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">Admin Panel</h1>
+        <h1 className="text-2xl font-bold text-ink">Brands</h1>
         {searchQuery && (
           <p className="text-sm text-ink-muted mt-1">
             Menampilkan hasil untuk "<span className="font-medium text-ink">{searchQuery}</span>"
-            {' '}({filtered.length} produk ditemukan)
+            {' '}({filtered.length} brand ditemukan)
           </p>
         )}
       </div>
@@ -133,18 +128,18 @@ export function AdminDashboard() {
       {!loading && !error && filtered.length === 0 && (
         <div className="bg-surface rounded-lg border border-border p-12 text-center">
           <p className="text-ink-muted">
-            {searchQuery ? `No products matching "${searchQuery}".` : 'No products yet.'}
+            {searchQuery ? `No brands matching "${searchQuery}".` : 'No brands yet.'}
           </p>
           <Link
-            to="/admin/products/new"
+            to="/admin/brands/new"
             className="mt-2 inline-block text-primary font-medium hover:underline"
           >
-            Add your first product
+            Add your first brand
           </Link>
         </div>
       )}
 
-      {/* Product Table */}
+      {/* Brand Table */}
       {!loading && !error && filtered.length > 0 && (
         <div className="bg-surface rounded-lg border border-border overflow-x-auto">
           <table className="w-full text-sm">
@@ -152,49 +147,34 @@ export function AdminDashboard() {
               <tr className="bg-surface-alt border-b border-border">
                 <th className="text-center px-2 py-3 font-medium text-ink-secondary w-10">No</th>
                 <th className="text-left px-4 py-3 font-medium text-ink-secondary">Name</th>
-                <th className="text-left px-4 py-3 font-medium text-ink-secondary">Category</th>
-                <th className="text-right px-4 py-3 font-medium text-ink-secondary">Price</th>
-                <th className="text-center px-4 py-3 font-medium text-ink-secondary">Active</th>
+                <th className="text-left px-4 py-3 font-medium text-ink-secondary hidden sm:table-cell">Slug</th>
                 <th className="text-right px-4 py-3 font-medium text-ink-secondary">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {paginated.map((product, idx) => (
-                <tr key={product.id} className="border-b border-border hover:bg-surface-hover transition-colors">
+              {paginated.map((brand, idx) => (
+                <tr key={brand.id} className="border-b border-border hover:bg-surface-hover transition-colors">
                   <td className="px-2 py-3 text-center text-sm text-ink-muted">{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-surface-hover rounded-lg overflow-hidden shrink-0">
-                        {product.images[0] && (
-                          <img
-                            src={`/${product.images[0]}`}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <span className="font-medium text-ink line-clamp-1">{product.name}</span>
-                    </div>
+                    <span className="font-medium text-ink">{brand.name}</span>
                   </td>
-                  <td className="px-4 py-3 text-ink-secondary">{getCategoryName(product.category)}</td>
-                  <td className="px-4 py-3 text-right font-medium text-ink">{formatPrice(product.price)}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`inline-block w-2 h-2 rounded-full ${product.isActive ? 'bg-green-500' : 'bg-ink-muted'}`} />
+                  <td className="px-4 py-3 text-ink-muted hidden sm:table-cell">
+                    <code className="text-xs bg-surface-alt px-1.5 py-0.5 rounded">{brand.slug}</code>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link
-                        to={`/admin/products/${product.id}/edit`}
+                        to={`/admin/brands/${brand.id}/edit`}
                         className="px-3 py-1.5 text-xs font-medium text-primary bg-primary-bg hover:bg-primary hover:text-primary-text rounded-md transition-colors"
                       >
                         Edit
                       </Link>
                       <button
-                        onClick={() => setDeleteTarget(product)}
-                        disabled={deletingId === product.id}
+                        onClick={() => setDeleteTarget(brand)}
+                        disabled={deleting}
                         className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50"
                       >
-                        {deletingId === product.id ? '...' : 'Delete'}
+                        {deleting ? '...' : 'Delete'}
                       </button>
                     </div>
                   </td>
@@ -207,7 +187,7 @@ export function AdminDashboard() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-surface-alt">
               <span className="text-sm text-ink-muted">
-                {filtered.length} produk total
+                {filtered.length} brand total
               </span>
               <div className="flex items-center gap-1">
                 <button
@@ -248,7 +228,7 @@ export function AdminDashboard() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Delete Product"
+        title="Delete Brand"
         message={
           deleteTarget
             ? `Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.`
@@ -256,14 +236,14 @@ export function AdminDashboard() {
         }
         confirmText="Delete"
         variant="danger"
-        loading={!!deletingId}
+        loading={deleting}
       />
 
       {/* Floating Action Button */}
       <Link
-        to="/admin/products/new"
+        to="/admin/brands/new"
         className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-text rounded-full shadow-lg hover:bg-primary-dark hover:shadow-xl transition-all duration-200 flex items-center justify-center z-50"
-        title="Add Product"
+        title="Add Brand"
       >
         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
