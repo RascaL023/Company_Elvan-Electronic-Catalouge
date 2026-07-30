@@ -9,7 +9,7 @@ import {
   query,
   where,
   orderBy,
-  limit,
+  limit as firestoreLimit,
   startAfter,
   QueryConstraint,
 } from 'firebase/firestore';
@@ -42,10 +42,14 @@ export class FirebaseProductRepository implements ProductRepository {
   }
 
   async list(options: ProductListOptions = {}): Promise<ProductListResult> {
-    const db = getDb();
     const { category, sort, search, cursor } = options;
     const pageSize = options.limit ?? DEFAULT_LIMIT;
 
+    if (search) {
+      return this.listClientSide({ ...options, search });
+    }
+
+    const db = getDb();
     const constraints: QueryConstraint[] = [];
     constraints.push(where('isActive', '==', true));
 
@@ -53,18 +57,14 @@ export class FirebaseProductRepository implements ProductRepository {
       constraints.push(where('category', '==', category));
     }
 
-    if (search) {
-      const q = search.toLowerCase();
-      constraints.push(where('name', '>=', q));
-      constraints.push(where('name', '<', q + '\uf8ff'));
-    } else if (sort && sort !== 'default') {
+    if (sort && sort !== 'default') {
       const [field, dir] = SORT_FIELDS[sort];
       constraints.push(orderBy(field, dir));
     } else {
       constraints.push(orderBy('createdAt', 'desc'));
     }
 
-    constraints.push(limit(pageSize));
+    constraints.push(firestoreLimit(pageSize));
 
     if (cursor) {
       const cursorRef = doc(db, COLLECTION, cursor);
@@ -86,6 +86,56 @@ export class FirebaseProductRepository implements ProductRepository {
       hasMore,
       cursor: docs.length > 0 ? docs[docs.length - 1].id : null,
     };
+  }
+
+  private async listClientSide(options: ProductListOptions): Promise<ProductListResult> {
+    const { category, sort, search, cursor } = options;
+    const pageSize = options.limit ?? DEFAULT_LIMIT;
+
+    let result = (await this.getAll()).filter((p) => p.isActive);
+
+    if (category) {
+      result = result.filter((p) => p.category === category);
+    }
+
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q));
+    }
+
+    result = this.sortProducts(result, sort);
+
+    let startIndex = 0;
+    if (cursor) {
+      const idx = result.findIndex((p) => p.id === cursor);
+      if (idx !== -1) startIndex = idx + 1;
+    }
+
+    const paged = result.slice(startIndex, startIndex + pageSize);
+
+    return {
+      products: paged,
+      hasMore: startIndex + pageSize < result.length,
+      cursor: paged.length > 0 ? paged[paged.length - 1].id : null,
+    };
+  }
+
+  private sortProducts(products: Product[], sort?: string): Product[] {
+    const sorted = [...products];
+    switch (sort) {
+      case 'price-asc':
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating-desc':
+        sorted.sort((a, b) => b.rating.rate - a.rating.rate);
+        break;
+      default:
+        sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return sorted;
   }
 
   async getById(id: string): Promise<Product | null> {

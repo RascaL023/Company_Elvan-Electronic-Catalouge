@@ -4,7 +4,6 @@ import { Product } from '../../core/types/product';
 import { SortOption } from '../../core/types/common';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
-import { useDebounce } from '../../hooks/useDebounce';
 import { ProductGrid } from './ProductGrid';
 import { SortControl } from './SortControl';
 import { ProductModal } from './ProductModal';
@@ -19,7 +18,6 @@ export function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const { categories } = useCategories();
-  const debouncedSearch = useDebounce(search, 300);
   const {
     products,
     loading,
@@ -28,7 +26,7 @@ export function ProductsPage() {
     hasMore,
     loadMore,
     refetch,
-  } = useProducts(debouncedSearch, sort, category);
+  } = useProducts(search, sort, category);
 
   const handleSortChange = (value: SortOption) => {
     setSearchParams((prev) => {
@@ -106,7 +104,7 @@ export function ProductsPage() {
       {error ? (
         <ErrorState message={error} onRetry={refetch} />
       ) : !loading && products.length === 0 ? (
-        <EmptyState query={debouncedSearch} />
+        <EmptyState query={search} />
       ) : (
         <>
           <ProductGrid

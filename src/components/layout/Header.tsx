@@ -22,7 +22,7 @@ export function Header() {
     return clean.startsWith('0') ? `https://wa.me/62${clean.substring(1)}` : `https://wa.me/${clean}`;
   };
 
-  const handleSearchChange = (value: string) => {
+  const handleSearch = (value: string) => {
     setSearchParams((prev) => {
       if (value) prev.set('search', value);
       else prev.delete('search');
@@ -45,7 +45,7 @@ export function Header() {
 
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 max-w-xl justify-center mx-auto">
-            <SearchBar value={search} onChange={handleSearchChange} />
+            <SearchBar initialValue={search} onSearch={handleSearch} />
           </div>
 
           {/* Desktop Right Icons */}
@@ -122,9 +122,9 @@ export function Header() {
       >
         <div className="flex flex-col gap-5">
           <SearchBar 
-            value={search} 
-            onChange={(v) => { 
-              handleSearchChange(v); 
+            initialValue={search} 
+            onSearch={(v) => { 
+              handleSearch(v); 
               setIsMenuOpen(false); 
             }} 
           />

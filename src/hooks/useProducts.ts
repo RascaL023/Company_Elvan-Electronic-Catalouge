@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Product } from '../core/types/product';
 import { SortOption } from '../core/types/common';
 import { useRepository } from './useRepository';
-import { filterByQuery } from '../services/product.service';
 
 interface UseProductsReturn {
   products: Product[];
@@ -76,12 +75,8 @@ export function useProducts(
     }
   }, [cursor, loadingMore, productRepository, categorySlug, sortOption, searchQuery]);
 
-  const filtered = searchQuery
-    ? filterByQuery(products, searchQuery)
-    : products;
-
   return {
-    products: filtered,
+    products,
     loading,
     loadingMore,
     error,
