@@ -1,5 +1,5 @@
 import { CategoryRepository } from '../core/repositories/category.repository';
-import { Category } from '../core/types/category';
+import { Category, CategoryPayload } from '../core/types/category';
 import { SimpleCache } from './cache';
 
 const TTL = 300_000;
@@ -25,5 +25,22 @@ export class CachedCategoryRepository implements CategoryRepository {
     const result = await this.inner.getById(id);
     if (result) this.cache.set(key, result, TTL);
     return result;
+  }
+
+  async create(payload: CategoryPayload): Promise<Category> {
+    const result = await this.inner.create(payload);
+    this.cache.clear();
+    return result;
+  }
+
+  async update(id: string, payload: Partial<CategoryPayload>): Promise<Category> {
+    const result = await this.inner.update(id, payload);
+    this.cache.clear();
+    return result;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.inner.delete(id);
+    this.cache.clear();
   }
 }

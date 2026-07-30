@@ -28,6 +28,18 @@ const ProductForm = lazy(() =>
   }))
 );
 
+const AdminCategoryList = lazy(() =>
+  import('../features/admin/AdminCategoryList').then((m) => ({
+    default: m.AdminCategoryList,
+  }))
+);
+
+const CategoryForm = lazy(() =>
+  import('../features/admin/CategoryForm').then((m) => ({
+    default: m.CategoryForm,
+  }))
+);
+
 const LoginPage = lazy(() =>
   import('../features/auth/LoginPage').then((m) => ({
     default: m.LoginPage,
@@ -94,6 +106,30 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <ProductForm />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/categories',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminCategoryList />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/categories/new',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CategoryForm />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/categories/:id/edit',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CategoryForm />
           </Suspense>
         ),
       },

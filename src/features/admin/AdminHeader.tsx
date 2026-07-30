@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SearchBar } from '../../components/ui/SearchBar';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { storageConfig } from '../../config/storage';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -10,6 +11,8 @@ export function AdminHeader() {
   const { isDark, toggle } = useTheme();
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleSearch = (value: string) => {
     if (value) {
@@ -63,7 +66,7 @@ export function AdminHeader() {
               )}
             </button>
             <button
-              onClick={logout}
+              onClick={() => setShowLogoutConfirm(true)}
               className="px-3 py-1.5 text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
             >
               Logout
@@ -111,7 +114,7 @@ export function AdminHeader() {
               View Site
             </Link>
             <button
-              onClick={() => { logout(); setIsMenuOpen(false); }}
+              onClick={() => { setShowLogoutConfirm(true); setIsMenuOpen(false); }}
               className="flex items-center gap-3 px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-surface-hover rounded-lg transition-colors w-full text-left"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,6 +135,25 @@ export function AdminHeader() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        onClose={() => !loggingOut && setShowLogoutConfirm(false)}
+        onConfirm={async () => {
+          setLoggingOut(true);
+          try {
+            await logout();
+          } finally {
+            setLoggingOut(false);
+            setShowLogoutConfirm(false);
+          }
+        }}
+        title="Logout"
+        message="Are you sure you want to logout from the admin panel?"
+        confirmText="Logout"
+        variant="warning"
+        loading={loggingOut}
+      />
     </header>
   );
 }
