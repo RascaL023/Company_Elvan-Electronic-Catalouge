@@ -62,7 +62,7 @@ export function ProductDetailPage() {
           <img
             src={primaryImageUrl}
             alt={product.name}
-            className="w-full max-w-md h-auto object-contain"
+            className="w-full max-w-md h-auto object-contain text-sm text-ink-muted text-center"
           />
         </div>
         <div className="w-full md:w-1/2 flex flex-col gap-4">
