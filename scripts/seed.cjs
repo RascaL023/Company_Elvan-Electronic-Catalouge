@@ -1,5 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const { resolveImage } = require('./resolve-image.cjs');
+
+const isDryRun = process.argv.includes('--dry-run');
 
 const serviceAccountPath = path.join(__dirname, 'service-account.json');
 if (!fs.existsSync(serviceAccountPath)) {
@@ -80,6 +83,7 @@ const products = [
     rating: { rate: 4.4, count: 120 },
     isActive: true,
   },
+
   // {
   //   name: 'Polytron PLD-32RG5059 32" Full HD Google TV',
   //   slug: 'pld-32rg5059',
@@ -320,6 +324,406 @@ const products = [
       images: ['assets/images/products/washing_machine/aw-k900dn.webp'],
       rating: { rate: 4.7, count: 221 },
       isActive: true,
+    },
+
+    {
+        name: 'Panasonic NA-F90JSZ1H Mesin Cuci Top Loading 9 Kg',
+        slug: 'na-f90jsz1h',
+        brand: 'Panasonic',
+        price: 4100000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/na-f90jsz1h.webp'],
+        rating: { rate: 4.5, count: 120 },
+        isActive: true,
+    },
+    {
+        name: 'Toshiba AW-J1000FN Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'aw-j1000fn',
+        brand: 'Toshiba',
+        price: 3850000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/aw-j1000fn.webp'],
+        rating: { rate: 4.6, count: 183 },
+        isActive: true,
+    },
+    {
+        name: 'Electrolux EWT-8588H1WB Mesin Cuci 1 Tabung 8.5 Kg Top Loading',
+        slug: 'ewt-8588h1wb',
+        brand: 'Electrolux',
+        price: 4150000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/ewt-8588h1wb.webp'],
+        rating: { rate: 4.4, count: 95 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-7029TS Mesin Cuci 1 Tabung 7 Kg Top Loading',
+        slug: 'paw-7029ts',
+        brand: 'Polytron',
+        price: 2500000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-7029ts.webp'],
+        rating: { rate: 4.3, count: 156 },
+        isActive: true,
+    },
+    {
+        name: 'Panasonic NA-FD95X1BSG Mesin Cuci 1 Tabung 9.5 Kg Top Loading',
+        slug: 'na-fd95x1bsg',
+        brand: 'Panasonic',
+        price: 5650000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/na-fd95x1bsg.webp'],
+        rating: { rate: 4.7, count: 210 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-9028W Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'paw-9028w',
+        brand: 'Polytron',
+        price: 2900000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-9028w.webp'],
+        rating: { rate: 4.2, count: 88 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-8029TS Mesin Cuci 1 Tabung 8 Kg Top Loading',
+        slug: 'paw-8029ts',
+        brand: 'Polytron',
+        price: 2700000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-8029ts.webp'],
+        rating: { rate: 4.1, count: 72 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-9029TS Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'paw-9029ts',
+        brand: 'Polytron',
+        price: 2900000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-9029ts.webp'],
+        rating: { rate: 4.3, count: 134 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-9029TY Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'paw-9029ty',
+        brand: 'Polytron',
+        price: 2900000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-9029ty.webp'],
+        rating: { rate: 4.2, count: 98 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-1028Y Mesin Cuci 1 Tabung 10 Kg Top Loading',
+        slug: 'paw-1028y',
+        brand: 'Polytron',
+        price: 3150000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-1028y.webp'],
+        rating: { rate: 4.4, count: 167 },
+        isActive: true,
+    },
+    {
+        name: 'Samsung WA-90H4200SG Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'wa-90h4200sg',
+        brand: 'Samsung',
+        price: 3500000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/wa-90h4200sg.webp'],
+        rating: { rate: 4.6, count: 245 },
+        isActive: true,
+    },
+    {
+        name: 'Panasonic NA-F80MB1WSG Mesin Cuci 1 Tabung 8 Kg Top Loading',
+        slug: 'na-f80mb1wsg',
+        brand: 'Panasonic',
+        price: 3800000,
+        description: '',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/na-f80mb1wsg.webp'],
+        rating: { rate: 4.5, count: 178 },
+        isActive: true,
+    },
+
+    {
+        name: 'Polytron PAW-9029TY Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'paw-9029ty',
+        brand: 'Polytron',
+        price: 3350000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-9029ty.webp'],
+        rating: { rate: 4.2, count: 98 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-8527M Mesin Cuci 1 Tabung 8.5 Kg Top Loading',
+        slug: 'paw-8527m',
+        brand: 'Polytron',
+        price: 2450000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 8.5 kg dari brand Polytron, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-8527m.webp'],
+        rating: { rate: 4.1, count: 85 },
+        isActive: true,
+    },
+    {
+        name: 'Aqua QW-1230HT Mesin Cuci 2 Tabung 12 Kg',
+        slug: 'qw-1230ht',
+        brand: 'Aqua',
+        price: 3050000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 12 kg dari brand Aqua.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/qw-1230ht.webp'],
+        rating: { rate: 4.3, count: 112 },
+        isActive: true,
+    },
+    {
+        name: 'Panasonic NA-F105MB1WS Mesin Cuci 1 Tabung 10.5 Kg Top Loading',
+        slug: 'na-f105mb1ws',
+        brand: 'Panasonic',
+        price: 4800000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 10.5 kg dari brand Panasonic, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/na-f105mb1ws.webp'],
+        rating: { rate: 4.6, count: 195 },
+        isActive: true,
+    },
+    {
+        name: 'Panasonic NA-FD135X3BS Mesin Cuci 1 Tabung 13.5 Kg Top Loading',
+        slug: 'na-fd135x3bs',
+        brand: 'Panasonic',
+        price: 6600000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 13.5 kg dari brand Panasonic, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/na-fd135x3bs.webp'],
+        rating: { rate: 4.7, count: 220 },
+        isActive: true,
+    },
+    {
+        name: 'Panasonic NA-F72MB1WSG Mesin Cuci 1 Tabung 7.2 Kg Top Loading',
+        slug: 'na-f72mb1wsg',
+        brand: 'Panasonic',
+        price: 3400000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 7.2 kg dari brand Panasonic, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/na-f72mb1wsg.webp'],
+        rating: { rate: 4.4, count: 156 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-90517WB/WM Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'paw-90517wb-wm',
+        brand: 'Polytron',
+        price: 2800000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-90517wb-wm.webp'],
+        rating: { rate: 4.3, count: 142 },
+        isActive: true,
+    },
+    {
+        name: 'Aqua AQW-77D-H Mesin Cuci 1 Tabung 7 Kg Twin Tub',
+        slug: 'aqw-77d-h',
+        brand: 'Aqua',
+        price: 2350000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 7 kg dari brand Aqua, tipe twin tub.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/aqw-77d-h.webp'],
+        rating: { rate: 4.2, count: 108 },
+        isActive: true,
+    },
+
+    {
+        name: 'Polytron PWM-8072N/B Mesin Cuci 2 Tabung 8 Kg Twin Tub',
+        slug: 'pwm-8072n-b',
+        brand: 'Polytron',
+        price: 2050000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 8 kg dari brand Polytron, tipe twin tub.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-8072n-b.webp'],
+        rating: { rate: 4.1, count: 92 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-9072N/B Mesin Cuci 2 Tabung 9 Kg Twin Tub',
+        slug: 'pwm-9072n-b',
+        brand: 'Polytron',
+        price: 2300000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 9 kg dari brand Polytron, tipe twin tub.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-9072n-b.webp'],
+        rating: { rate: 4.2, count: 105 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-7029TS Mesin Cuci 1 Tabung 7 Kg Top Loading',
+        slug: 'paw-7029ts',
+        brand: 'Polytron',
+        price: 2500000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 7 kg dari brand Polytron, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-7029ts.webp'],
+        rating: { rate: 4.3, count: 156 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-8029TS Mesin Cuci 1 Tabung 8 Kg Top Loading',
+        slug: 'paw-8029ts',
+        brand: 'Polytron',
+        price: 2750000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 8 kg dari brand Polytron, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-8029ts.webp'],
+        rating: { rate: 4.1, count: 72 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-8081 Mesin Cuci 2 Tabung 8 Kg',
+        slug: 'pwm-8081',
+        brand: 'Polytron',
+        price: 1750000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 8 kg dari brand Polytron.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-8081.webp'],
+        rating: { rate: 4.0, count: 68 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-9076 Mesin Cuci 2 Tabung 9 Kg Twin Tub',
+        slug: 'pwm-9076',
+        brand: 'Polytron',
+        price: 1850000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 9 kg dari brand Polytron, tipe twin tub.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-9076.webp'],
+        rating: { rate: 4.2, count: 115 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-7081 Mesin Cuci 2 Tabung 7 Kg',
+        slug: 'pwm-7081',
+        brand: 'Polytron',
+        price: 1650000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 7 kg dari brand Polytron.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-7081.webp'],
+        rating: { rate: 3.9, count: 54 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-9028W Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'paw-9028w',
+        brand: 'Polytron',
+        price: 3000000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-9028w.webp'],
+        rating: { rate: 4.2, count: 88 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PAW-9028Y Mesin Cuci 1 Tabung 9 Kg Top Loading',
+        slug: 'paw-9028y',
+        brand: 'Polytron',
+        price: 3000000,
+        description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/paw-9028y.webp'],
+        rating: { rate: 4.3, count: 102 },
+        isActive: true,
+    },
+
+    {
+        name: 'Polytron PWM-1081 Mesin Cuci 2 Tabung 10 Kg',
+        slug: 'pwm-1081',
+        brand: 'Polytron',
+        price: 2050000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 10 kg dari brand Polytron.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-1081.webp'],
+        rating: { rate: 4.3, count: 128 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-7073P/B Mesin Cuci 2 Tabung 7 Kg Twin Tub',
+        slug: 'pwm-7073p-b',
+        brand: 'Polytron',
+        price: 1900000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 7 kg dari brand Polytron, tipe twin tub.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-7073p-b.webp'],
+        rating: { rate: 4.0, count: 76 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-7081 Mesin Cuci 2 Tabung 7 Kg',
+        slug: 'pwm-7081',
+        brand: 'Polytron',
+        price: 1950000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 7 kg dari brand Polytron.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-7081.webp'],
+        rating: { rate: 3.9, count: 54 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-8076 Mesin Cuci 2 Tabung 8 Kg Twin Tub',
+        slug: 'pwm-8076',
+        brand: 'Polytron',
+        price: 2050000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 8 kg dari brand Polytron, tipe twin tub.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-8076.webp'],
+        rating: { rate: 4.1, count: 89 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PWM-9081 Mesin Cuci 2 Tabung 9 Kg',
+        slug: 'pwm-9081',
+        brand: 'Polytron',
+        price: 2400000,
+        description: 'Mesin cuci 2 tabung dengan kapasitas 9 kg dari brand Polytron.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/pwm-9081.webp'],
+        rating: { rate: 4.2, count: 103 },
+        isActive: true,
+    },
+    {
+        name: 'Panasonic NA-W16XG2BNE Mesin Cuci Twin Tub 16 Kg',
+        slug: 'na-w16xg2bne',
+        brand: 'Panasonic',
+        price: 4300000,
+        description: 'Mesin cuci twin tub dengan kapasitas 16 kg dari brand Panasonic.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/na-w16xg2bne.webp'],
+        rating: { rate: 4.5, count: 142 },
+        isActive: true,
+    },
+    {
+        name: 'LG Mesin Cuci Twin Tub 16 Kg P-1600RTB',
+        slug: 'p-1600rtb',
+        brand: 'LG',
+        price: 3950000,
+        description: 'Mesin cuci twin tub dengan kapasitas 16 kg dari brand LG.',
+        category: 'washing_machine',
+        images: ['assets/images/products/washing_machine/p-1600rtb.webp'],
+        rating: { rate: 4.5, count: 142 },
+        isActive: true,
     },
 
   // ================= REFRIGERATOR =================
@@ -571,8 +975,16 @@ const categories = [
 async function seed() {
   const now = new Date().toISOString();
 
+  if (isDryRun) {
+    console.log('🔍 DRY RUN — tidak ada data yang ditulis ke Firestore\n');
+  }
+
   console.log('Seeding categories...');
   for (const cat of categories) {
+    if (isDryRun) {
+      console.log(`  📄 ${cat.name} (${cat.slug})`);
+      continue;
+    }
     await db.collection('categories').doc(cat.slug).set({
       name: cat.name,
       slug: cat.slug,
@@ -585,15 +997,31 @@ async function seed() {
 
   console.log('\nSeeding products...');
   for (const product of products) {
+    const resolvedImages = product.images.map((img) => {
+      const stem = path.basename(img, path.extname(img));
+      return resolveImage(product.category, stem);
+    });
+
+    if (isDryRun) {
+      console.log(`  📄 ${product.name} (${product.slug})`);
+      console.log(`     images: ${resolvedImages.join(', ')}`);
+      continue;
+    }
+
     await db.collection('products').doc(product.slug).set({
       ...product,
+      images: resolvedImages,
       createdAt: now,
       updatedAt: now,
     });
-    console.log(`  ✓ ${product.name} (${product.slug})`);
+    console.log(`  ✓ ${product.name} (${product.slug}) => ${resolvedImages[0]}`);
   }
 
-  console.log('\n✅ Seed complete!');
+  if (isDryRun) {
+    console.log('\n✅ Dry run selesai. Tidak ada data yang ditulis.');
+  } else {
+    console.log('\n✅ Seed complete!');
+  }
   process.exit(0);
 }
 
