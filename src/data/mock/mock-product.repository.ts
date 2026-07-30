@@ -16,7 +16,7 @@ const mockProducts: Product[] = [
     description:
       'Refrigerator Side by Side Samsung RS64R5331B4 dengan kapasitas 642L. Dilengkapi Digital Inverter Technology, Twin Cooling Plus, dan All-around Cooling. Memiliki fitur Ice Maker otomatis, display digital touch, dan pengaturan suhu presisi. Cocok untuk keluarga besar yang membutuhkan ruang penyimpanan maksimal dengan efisiensi energi tinggi.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigerator/Kulkas1.webp'],
+    images: ['assets/images/products/refrigerator/pra-15crx.webp'],
     rating: { rate: 4.7, count: 234 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -30,7 +30,7 @@ const mockProducts: Product[] = [
     description:
       'Kulkas 2 Pintu LG GN-B215SQMT dengan kapasitas 215L. Teknologi Smart Inverter Compressor menjamin efisiensi energi dan ketahanan hingga 10 tahun garansi kompresor. Fitur Multi Air Flow memastikan suhu merata ke seluruh bagian kulkas. Desain elegan dengan interior LED yang hemat energi.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigerator/Kulkas2.jpg'],
+    images: ['assets/images/products/refrigerator/pra-18mow.webp'],
     rating: { rate: 4.5, count: 189 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -44,7 +44,7 @@ const mockProducts: Product[] = [
     description:
       'Kulkas 1 Pintu Sharp SJ-317MG kapasitas 170L dengan teknologi Pendingin Cepat yang mampu mendinginkan minuman dalam waktu singkat. Rak kaca tempered berkualitas tinggi, konsumsi daya rendah, dan kompresor hemat energi. Cocok untuk kebutuhan keluarga kecil, kos-kosan, atau sebagai kulkas tambahan.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigerator/Kulkas3.jpg'],
+    images: ['assets/images/products/refrigerator/sj-x187mg-db.webp'],
     rating: { rate: 4.3, count: 156 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -58,7 +58,7 @@ const mockProducts: Product[] = [
     description:
       'Samsung 43-inch 4K UHD Smart TV dengan Crystal Display dan HDR. PurColor technology menghasilkan gambar yang lebih hidup dan natural. Smart Hub terintegrasi untuk akses Netflix, YouTube, Disney+ dan berbagai aplikasi streaming lainnya. Desain AirSlim yang tipis dan elegan.',
     category: 'television',
-    images: ['assets/images/products/television/tv-samsung-43.jpg'],
+    images: ['assets/images/products/television/pld-24tv1853.jpeg'],
     rating: { rate: 4.6, count: 312 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -72,7 +72,7 @@ const mockProducts: Product[] = [
     description:
       'LG 55-inch 4K NanoCell Smart TV dengan teknologi NanoCell untuk warna yang lebih akurat dan jernih dari sudut pandang mana pun. Dilengkapi dengan α5 Gen5 AI Processor 4K, HDR10 Pro, dan webOS 6.0. Dolby Digital Plus memberikan pengalaman audio yang immersive.',
     category: 'television',
-    images: ['assets/images/products/television/tv-lg-55.jpg'],
+    images: ['assets/images/products/television/pld-32tv1755.webp'],
     rating: { rate: 4.5, count: 278 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -86,7 +86,7 @@ const mockProducts: Product[] = [
     description:
       'Xiaomi Mi TV 4A 32-inch HD Ready Smart TV dengan PatchWall UI yang intuitif. Dukungan untuk berbagai platform streaming, koneksi WiFi built-in, dan desain frameless yang modern. Cocok untuk kamar tidur atau ruang keluarga kecil dengan budget terbatas.',
     category: 'television',
-    images: ['assets/images/products/television/tv-xiaomi-32.jpg'],
+    images: ['assets/images/products/television/pld-32v1853.webp'],
     rating: { rate: 4.2, count: 445 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
