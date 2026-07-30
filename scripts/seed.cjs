@@ -147,9 +147,6 @@ const products = [
   //   isActive: true,
   // },
   // {
-  //   name: 'Polytron PLD-40CV8969 40" Smart TV',
-  //   slug: 'pld-40cv8969',
-  //   brand: 'Polytron',
   //   price: 3400000,
   //   description: 'LED 40 Inch Polytron Smart TV PLD-40CV8969 dengan tampilan layar luas dan jernih.',
   //   category: 'television',
@@ -323,7 +320,7 @@ const products = [
       images: ['assets/images/products/washing_machine/aw-k900dn.webp'],
       rating: { rate: 4.7, count: 221 },
       isActive: true,
-    }
+    },
 
   // ================= REFRIGERATOR =================
   // {
@@ -526,6 +523,41 @@ const products = [
   //   rating: { rate: 4.8, count: 115 },
   //   isActive: true,
   // }
+
+  {
+    name: 'Kulkas 1 Pintu Polytron 150 Liter PRA-15CRX',
+    slug: 'pra-15crx',
+    brand: 'Polytron',
+    price: 2250000,
+    description: 'Kulkas 1 Pintu Polytron 150 Liter',
+    category: 'refrigerator',
+    images: ['assets/images/products/refrigerator/pra-15crx.webp'],
+    rating: { rate: 4.8, count: 115 },
+    isActive: true,
+  },
+  {
+    name: 'Kulkas 1 Pintu Polytron 180 Liter PRA-18MOW/B',
+    slug: 'pra-18mow',
+    brand: 'Polytron',
+    price: 2800000,
+    description: 'Kulkas 1 Pintu Polytron 180 Liter',
+    category: 'refrigerator',
+    images: ['assets/images/products/refrigerator/pra-18mow.webp'],
+    rating: { rate: 4.7, count: 115 },
+    isActive: true,
+  },
+  {
+    name: 'Kulkas 1 Pintu Sharp Refrigerator 166 LLiter SJ-X187MG-DB/DP',
+    slug: 'sj-x187mg-db-dp',
+    brand: 'Sharp',
+    price: 2500000,
+    description: 'Kulkas 1 Pintu Sharp Refrigerator 166 LLiter',
+    category: 'refrigerator',
+    images: ['assets/images/products/refrigerator/sj-x187mg-db.webp'],
+    rating: { rate: 4.9, count: 124 },
+    isActive: true,
+  }
+
 ];
 
 const categories = [
