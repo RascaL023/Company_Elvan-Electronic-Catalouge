@@ -39,7 +39,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         </Link>
         <Rating rate={product.rating.rate} count={product.rating.count} />
         <div className="mt-auto pt-2 flex items-center gap-3">
-          <span className="text-xl sm:text-2xl font-bold text-primary shrink min-w-0">
+          <span className="text-xl sm:text-2xl min-[650px]:max-[740px]:text-base font-bold text-primary shrink min-w-0 truncate">
             {formatPrice(product.price)}
           </span>
           <button
@@ -47,7 +47,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
               e.stopPropagation();
               onQuickView(product);
             }}
-            className="ml-auto shrink-0 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary bg-primary-bg hover:bg-primary hover:text-primary-text rounded-lg transition-colors"
+            className="ml-auto shrink-0 px-3 py-1.5 min-[650px]:max-[740px]:px-2 text-xs sm:text-sm min-[650px]:max-[740px]:text-[11px] font-medium text-primary bg-primary-bg hover:bg-primary hover:text-primary-text rounded-lg transition-colors"
           >
             Quick View
           </button>
