@@ -7,7 +7,7 @@ import {
 import { Product } from '../core/types/product';
 import { SimpleCache } from './cache';
 
-const TTL = 60_000;
+const TTL = 180_000;
 
 export class CachedProductRepository implements ProductRepository {
   private cache = new SimpleCache();
