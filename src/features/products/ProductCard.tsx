@@ -11,8 +11,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onQuickView }: ProductCardProps) {
-  const primaryImage = ImageService.getPrimaryUrl(product.images);
-  const thumbnailUrl = ImageService.getThumbnailUrl(primaryImage);
+  const thumbnailUrl = ImageService.getPrimaryThumbnailUrl(product.images);
 
   return (
     <div className="bg-surface rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col group border border-border">
