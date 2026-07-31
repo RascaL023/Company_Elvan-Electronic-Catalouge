@@ -7,7 +7,7 @@ This project uses a **repository-based architecture** for clarity, testability, 
 Current state:
 - **Public catalog** — product listing, detail page, category & brand filtering.
 - **Admin area** — full CRUD for **products, categories, and brands**, protected by Firebase Auth.
-- **Image hosting** — hybrid: legacy products use local paths (`assets/images/products/...`), new uploads store full **ImageKit** URLs. Both resolve transparently through the image service.
+- **Image hosting** — relative keys only (`assets/images/products/...`); the resolver maps them to ImageKit CDN URLs with transforms. Provider-agnostic: switching backends needs no DB changes.
 - **Image upload** — browser uploads directly to ImageKit (file never touches our backend); the upload **signature** is issued by a small Cloudflare Worker that holds the ImageKit private key.
 
 This document describes the current, real architecture. The quick-start and day-to-day commands live in `README.md`; this file focuses on *why* things are structured the way they are and how data flows.
@@ -110,17 +110,23 @@ components  ──useRepository()──▶  repository interface
 
 ### Image resolution
 
-All display components go through `ImageService` / `getImageUrl` (`src/utils/imageUrl.ts`):
+All display components go through `ImageService` / `getImageUrl` (`src/utils/imageUrl.ts`).
+The database stores **relative keys only** (provider-agnostic), e.g.
+`assets/images/products/television/pld-24v1855.jpg`. The resolver maps a key to a
+full URL based on `VITE_STORAGE_PROVIDER`:
 
-- Key starts with `http(s)://` → **pass-through** (ImageKit CDN URL, stored as-is).
-- Any other key → treated as a local path (served from Firebase Hosting).
+- `imagekit` → `https://ik.imagekit.io/elvanelectronic/<key>` + `?tr=…` transforms
+  (thumbnails/resized variants via `getThumbnailUrl`, `getMediumImageUrl`, `getDetailImageUrl`).
+- `local` (dev/mock) → served from `public/`.
+- `s3` / `cloudflare` / `cloudinary` → their respective URL builders.
 
 ```
-getImageUrl("assets/images/products/television/pld-24v1855.jpg")  → "/assets/images/products/television/pld-24v1855.jpg"
-getImageUrl("https://ik.imagekit.io/elvanelectronic/...")         → (unchanged)
+getImageUrl("assets/images/products/television/pld-24v1855.jpg", { width: 400, height: 300 })
+  → "https://ik.imagekit.io/elvanelectronic/assets/images/products/television/pld-24v1855.jpg?tr=w-400,h-300,q-70"
 ```
 
-This is what makes the hybrid local+ImageKit setup invisible to the UI.
+This is what keeps storage provider-agnostic: **swapping the image backend never
+touches database records.**
 
 ### Admin image upload flow
 
@@ -128,13 +134,14 @@ This is what makes the hybrid local+ImageKit setup invisible to the UI.
 ProductForm selects a file
   → ① GET {VITE_IMAGEKIT_AUTH_ENDPOINT}/signature   (Cloudflare Worker; Origin allowlist enforced)
   → ② POST file → https://upload.imagekit.io/api/v1/files/upload
-       folder: products/{category}/   fileName: {slug}.{ext}   useUniqueFileName: true
-  → ③ full ImageKit URL stored into form.images[i]
+       folder: assets/images/products/{category}/   fileName: {slug}.{ext}   useUniqueFileName: true
+  → ③ relative key (response.filePath, no leading slash) stored into form.images[i]
   → submit → product written to Firestore (requires admin auth)
 ```
 
 - The **private key never leaves the Worker** (`IMAGEKIT_PRIVATE_KEY` Cloudflare secret + local `.dev.vars`).
 - Swapping the signature backend (Worker → VPS) = change `VITE_IMAGEKIT_AUTH_ENDPOINT` and keep the `GET /signature → { token, expire, signature }` contract.
+- Migrating local seed images → ImageKit: `scripts/migrate-to-imagekit.cjs` (uploads `public/assets/images/products/**` to the same relative folder and normalizes any legacy keys in Firestore).
 
 ## Routing
 
@@ -166,7 +173,7 @@ Deploy after editing: `firebase deploy --only firestore:rules`.
 
 - **New backend**: add e.g. `src/data/api/api-product.repository.ts` implementing `ProductRepository`, swap in `providers.tsx`.
 - **New data source**: same pattern for category/brand.
-- **Image storage**: UI only ever deals with image *values* (local path or full URL). Uploads currently target ImageKit; pointing elsewhere means changing `src/services/imagekit.ts` — display code stays untouched.
+- **Image storage**: the database only ever stores **relative keys**; the resolver in `src/utils/imageUrl.ts` maps them to provider URLs (ImageKit today, others via `VITE_STORAGE_PROVIDER`). Uploads target ImageKit; pointing elsewhere means changing the resolver config — display code and DB records stay untouched.
 - **Custom domain / VPS move**:
   - FE auth endpoint → change `VITE_IMAGEKIT_AUTH_ENDPOINT`.
   - Worker `ALLOWED_ORIGINS` in `imagekit-auth-worker/wrangler.jsonc` → add the FE origin.

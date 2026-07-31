@@ -2,9 +2,11 @@
  * ImageKit Service
  *
  * Handles direct browser uploads to ImageKit (no backend involvement).
- * Stored image keys are full ImageKit URLs, which the existing
- * getImageUrl() resolver already passes through unchanged, so every
- * display component works without modification (hybrid local + remote).
+ * Stored image keys are relative paths following the existing seed pattern:
+ *   assets/images/products/{category}/{slug}.{ext}
+ *
+ * The display resolver (getImageUrl / resolveImageUrl) maps those keys to
+ * full ImageKit URLs with transforms, so the database stays provider-agnostic.
  *
  * The signature is fetched from VITE_IMAGEKIT_AUTH_ENDPOINT, which only
  * needs to implement GET /signature -> { token, expire, signature }.
@@ -70,13 +72,13 @@ function getFileExtension(file: File): string {
 
 /**
  * Upload a product image to ImageKit.
- * Folder mirrors the existing seed pattern: products/{category}/
+ * Folder mirrors the existing seed pattern: assets/images/products/{category}/
  * File name mirrors the slug pattern: {slug}.{ext}
- * Returns the full ImageKit URL to store as the image key.
+ * Returns the relative key to store in the database (no leading slash).
  */
 export async function uploadProductImage({ file, category, slug }: UploadProductImageOptions): Promise<string> {
   const baseName = slug || toSlug(file.name.replace(/\.[^.]+$/, '')) || 'image';
-  const folder = `products/${toSlug(category) || 'misc'}`;
+  const folder = `assets/images/products/${toSlug(category) || 'misc'}`;
   const { token, expire, signature } = await getSignature();
 
   const response = await getImageKitClient().upload({
@@ -89,7 +91,7 @@ export async function uploadProductImage({ file, category, slug }: UploadProduct
     token,
     expire,
   });
-  return response.url;
+  return response.filePath.replace(/^\//, '');
 }
 
 export const ImageKitService = {

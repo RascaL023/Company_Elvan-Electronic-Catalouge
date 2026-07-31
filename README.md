@@ -85,18 +85,21 @@ Pemilihan dilakukan di `src/app/providers.tsx` (satu-satunya tempat). Komponen m
 > **Pindah ke backend sendiri (VPS)?** Cukup buat implementasi interface baru (mis. `src/data/api/...`) lalu ganti wiring di `providers.tsx`. UI tidak berubah sama sekali.
 
 ### 2. Resolusi gambar
-Semua tampilan gambar lewat `src/services/imageService.ts` / `src/utils/imageUrl.ts`. Resolver sudah menangani **dua jenis key**:
-- Path lokal: `assets/images/products/...` → di-serve dari hosting
-- URL penuh ImageKit: `https://ik.imagekit.io/...` → pass-through langsung (CDN)
+Semua tampilan gambar lewat `src/services/imageService.ts` / `src/utils/imageUrl.ts`. DB hanya menyimpan **key relatif** (provider-agnostic), mis. `assets/images/products/washing_machine/aqw-77d-h.jpg`. Resolver `getImageUrl()` yang memetakan key → URL lengkap sesuai provider aktif:
+- `VITE_STORAGE_PROVIDER=imagekit` → `https://ik.imagekit.io/elvanelectronic/<key>` + transform `?tr=w-…,h-…,q-…`
+- `VITE_STORAGE_PROVIDER=local` (dev/mock) → di-serve dari `public/`
+- Provider lain (s3, cloudflare, cloudinary) tersedia lewat env yang sama
 
-Jadi UI tidak peduli gambar di mana disimpan.
+Jadi UI tidak peduli gambar di mana disimpan, dan **ganti penyedia gambar tidak butuh mengubah data di DB**.
 
 ### 3. ImageKit upload
 Browser **upload langsung ke ImageKit** — file tidak pernah lewat backend. Yang dibutuhkan:
 1. **Signature** dari Cloudflare Worker (`GET /signature`) — private key hanya di sini
 2. `imagekit-javascript` SDK mengirim file + signature ke `upload.imagekit.io`
 
-Lihat `src/services/imagekit.ts` dan `imagekit-auth-worker/src/index.ts`.
+File di-upload ke folder `assets/images/products/{category}/`, dan yang disimpan ke DB adalah **key relatif** (`response.filePath`, tanpa slash di depan) — bukan URL penuh. Lihat `src/services/imagekit.ts` dan `imagekit-auth-worker/src/index.ts`.
+
+> **Migrasi gambar lokal (seed) ke ImageKit?** Jalankan `scripts/migrate-to-imagekit.cjs` (lihat header script). Upload `public/assets/images/products/**` ke path yang sama + merapikan key legacy di Firestore.
 
 ---
 
@@ -106,15 +109,15 @@ Lihat `src/services/imagekit.ts` dan `imagekit-auth-worker/src/index.ts`.
 ```
 Browser → Firebase Hosting (statis)
        → baca products/categories/brands dari Firestore (public read)
-       → gambar: path lokal (hosting) atau URL ImageKit (CDN)
+       → resolver memetakan key relatif → URL provider aktif (ImageKit CDN / lokal)
 ```
 
 ### Admin upload gambar + create produk
 ```
 ProductForm pilih file
   → ① fetch GET /signature (Cloudflare Worker, cek Origin allowlist)
-  → ② POST file ke upload.imagekit.io (folder products/{category}/)
-  → ③ simpan URL hasil upload ke form.images[i]
+  → ② POST file ke upload.imagekit.io (folder assets/images/products/{category}/)
+  → ③ simpan key relatif hasil upload (response.filePath) ke form.images[i]
   → submit → tulis ke Firestore products/{id} (butuh login admin)
 ```
 

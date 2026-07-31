@@ -3,17 +3,19 @@
  * 
  * To use this, create a .env file in the project root with:
  * 
- * VITE_STORAGE_PROVIDER=local|s3|cloudflare
+ * VITE_STORAGE_PROVIDER=local|s3|cloudflare|cloudinary|imagekit
  * VITE_CDN_BASE_URL=https://your-cdn.com
  * VITE_S3_BUCKET=your-bucket-name
  * VITE_S3_REGION=us-east-1
  * VITE_CLOUDFLARE_ACCOUNT_ID=your-account-id
  * VITE_CLOUDFLARE_BUCKET=your-bucket-name
+ * VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
+ * VITE_IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_imagekit_id
  * 
  * For local development, VITE_STORAGE_PROVIDER=local is the default.
  */
 
-export type StorageProvider = 'local' | 's3' | 'cloudflare' | 'cloudinary';
+export type StorageProvider = 'local' | 's3' | 'cloudflare' | 'cloudinary' | 'imagekit';
 
 export interface StorageConfig {
   provider: StorageProvider;
@@ -30,6 +32,8 @@ export interface StorageConfig {
   // Cloudinary specific
   cloudinaryCloudName?: string;
   cloudinaryUploadPreset?: string;
+  // ImageKit specific
+  imagekitUrlEndpoint?: string;
 }
 
 function getEnvVar(key: string, defaultValue = ''): string {
@@ -50,9 +54,11 @@ export const storageConfig: StorageConfig = {
   cloudflareBucket: getEnvVar('VITE_CLOUDFLARE_BUCKET'),
   cloudinaryCloudName: getEnvVar('VITE_CLOUDINARY_CLOUD_NAME'),
   cloudinaryUploadPreset: getEnvVar('VITE_CLOUDINARY_UPLOAD_PRESET'),
+  imagekitUrlEndpoint: getEnvVar('VITE_IMAGEKIT_URL_ENDPOINT'),
 };
 
 export const isLocalStorage = storageConfig.provider === 'local';
 export const isS3Storage = storageConfig.provider === 's3';
 export const isCloudflareStorage = storageConfig.provider === 'cloudflare';
 export const isCloudinaryStorage = storageConfig.provider === 'cloudinary';
+export const isImageKitStorage = storageConfig.provider === 'imagekit';
