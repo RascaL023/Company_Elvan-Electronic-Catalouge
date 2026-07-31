@@ -2,166 +2,186 @@
 
 ## Overview
 
-This project uses a **three-layer architecture** for clarity, testability, and easy migration. All data access goes through repository interfaces. All image URLs are resolved using an abstraction layer, so the UI never cares where images are stored. There is zero coupling to any backend, storage, or image hosting solution.
+This project uses a **repository-based architecture** for clarity, testability, and easy migration. All data access goes through repository interfaces. All image resolution goes through a service layer, so the UI never cares where images are stored.
 
-There is a minimal Admin area for product CRUD (create, update, delete) and image key management. Images are referred to by key only (not URLs), so the system is ready for local/public folder or migration to Cloudflare R2 (or any object storage/backend).
+Current state:
+- **Public catalog** — product listing, detail page, category & brand filtering.
+- **Admin area** — full CRUD for **products, categories, and brands**, protected by Firebase Auth.
+- **Image hosting** — hybrid: legacy products use local paths (`assets/images/products/...`), new uploads store full **ImageKit** URLs. Both resolve transparently through the image service.
+- **Image upload** — browser uploads directly to ImageKit (file never touches our backend); the upload **signature** is issued by a small Cloudflare Worker that holds the ImageKit private key.
+
+This document describes the current, real architecture. The quick-start and day-to-day commands live in `README.md`; this file focuses on *why* things are structured the way they are and how data flows.
+
+## Repository Pattern (the core abstraction)
+
+All data access is behind interfaces in `src/core/repositories/`:
+
+| Interface | File | Notes |
+|---|---|---|
+| `ProductRepository` | `product.repository.ts` | CRUD + `list()` (pagination/filter/sort/search) |
+| `CategoryRepository` | `category.repository.ts` | CRUD |
+| `BrandRepository` | `brand.repository.ts` | CRUD |
+
+Every implementation is swappable without touching the UI:
+
+- `src/data/mock/` — in-memory (demo/dev without Firebase).
+- `src/data/firebase/` — Firestore-backed (production).
+- `src/services/cached-*.repository.ts` — thin cache wrapper around any of the above.
+
+The single wiring point is `src/app/providers.tsx`:
+
+```ts
+const useFirebase = Boolean(import.meta.env.VITE_FIREBASE_PROJECT_ID);
+
+const productRepository = new CachedProductRepository(
+  useFirebase ? new FirebaseProductRepository() : new MockProductRepository()
+);
+```
+
+Components consume via `useRepository()`. **To migrate to a custom backend (e.g. a VPS API), implement the interface and swap it here — nothing else changes.**
+
+### ProductPayload
+
+```ts
+export type ProductPayload = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
+```
+
+- `id` is **optional**. When provided it becomes the Firestore document id (`setDoc`); otherwise Firestore auto-generates it (`addDoc`).
+- The document **never stores an `id` field** — the id is the document name. Explicitly writing `id: undefined` throws in the current Firestore SDK, so the repository strips it via destructuring.
 
 ## Folder Structure
 
 ```
 src/
-├── app/                           # Application entry & composition root
+├── app/                           # Entry & composition root
 │   ├── App.tsx                    # Root component
-│   ├── providers.tsx              # Wires repositories into DataProvider
-│   └── router.tsx                 # React Router route definitions
+│   ├── providers.tsx              # Wires repository implementations
+│   └── router.tsx                 # All routes (public + admin, lazy-loaded)
 │
 ├── core/                          # Domain — zero external dependencies
-│   ├── types/
-│   │   ├── product.ts             # Product entity
-│   │   ├── category.ts            # Category entity
-│   │   └── common.ts              # SortOption, etc
-│   └── repositories/
-│       ├── product.repository.ts  # ProductRepository interface (+CRUD)
-│       └── category.repository.ts # CategoryRepository interface
+│   ├── types/                     # product.ts, category.ts, brand.ts, common.ts
+│   └── repositories/              # Repository interfaces (+payload types)
 │
 ├── data/                          # Concrete implementations — swappable
-│   └── mock/                      # In-memory mock for demo/development
-│       ├── mock-product.repository.ts
-│       └── mock-category.repository.ts
+│   ├── mock/                      # In-memory (mock-product/category/brand)
+│   └── firebase/                  # Firestore (repos + docToProduct mapper)
 │
-├── services/
+├── services/                      # Cross-cutting logic
 │   ├── DataProvider.tsx           # Context: injects repository instances
-│   ├── product.service.ts         # Pure functions: filter, sort, search
-│   └── imageService.ts            # Image URL resolver/abstraction
+│   ├── cache.ts                   # SimpleCache (in-memory TTL)
+│   ├── cached-*.repository.ts     # Cached wrappers over any repo impl
+│   ├── imageService.ts            # Image URL resolver (UI-facing)
+│   └── imagekit.ts                # ImageKit signature fetch + upload
 │
-├── config/
-│   └── storage.ts                 # Storage provider config/env util
+├── config/                        # Config from env
+│   ├── firebase.ts                # Lazy Firebase app/db/auth init
+│   ├── imagekit.ts                # ImageKit public key / URL / auth endpoint
+│   └── storage.ts                 # Legacy storage-provider config (local)
 │
-├── hooks/
-│   ├── useRepository.ts           # Consumes DataProvider context
-│   ├── useProducts.ts             # Fetch + filter + sort
-│   └── useProduct.ts              # Single product by ID
-│
-├── components/
-│   ├── ui/                        # Primitive, reusable UI atoms
-│   ├── layout/                    # Page structure components
-│   └── feedback/                  # User feedback states
-│
-├── features/                      # Feature-specific composites
-│   ├── products/                  # Catalog grid, UI, modal, etc.
-│   ├── product-detail/            # Product detail page
-│   └── admin/                     # Admin CRUD (dashboard, form, layout)
-│
-├── utils/
-│   ├── formatters.ts              # Currency, etc.
-│   └── categories.ts              # Localized category name mapping
+├── hooks/                         # useRepository, useProducts, useProduct,
+│   │                              # useCategories, useAuth
+│   ├── components/                # ui/ (Skeleton, Rating, Modal...), layout/,
+│   └── ...                        # feedback/
+├── features/                      # products, product-detail, admin, auth
+├── utils/                         # formatters, categories, hash (slug/id), imageUrl
 └── main.tsx
+
+imagekit-auth-worker/              # Cloudflare Worker (separate deploy)
+└── src/index.ts                   # GET /signature → { token, expire, signature }
+
+scripts/                           # seed.cjs (+resolve-image.cjs), service-account.json (gitignored)
 ```
 
-## Data & Image Flow
+## Data Flow
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  providers.tsx                                              │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │  repositories = { product: MockProductRepo, ... }     │  │
-│  └───────────────┬───────────────────────────────────────┘  │
-│                  │ context                                  │
-│  ┌───────────────▼───────────────────────────────────────┐  │
-│  │  Hooks (useProducts, useProduct, ...)                 │  │
-│  │  Called by feature components                         │  │
-│  └───────────────┬───────────────────────────────────────┘  │
-│                  │ repository interface                     │
-│  ┌───────────────▼───────────────────────────────────────┐  │
-│  │  Repository Implementation (mock, api, firestore)     │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                  │ image key                               │
-│  ┌───────────────▼─────────────────────────────┐           │
-│  │  imageService (getImageUrl, etc)            │           │
-│  │  Converts image key → public URL             │           │
-│  └─────────────────────────────────────────────┘           │
-└─────────────────────────────────────────────────────────────┘
+components  ──useRepository()──▶  repository interface
+                                        │
+                      ┌─────────────────┴─────────────────┐
+                 (Firebase/mock)                     (cached wrapper)
+                      │
+                      ▼
+              Firestore collection
+              products / categories / brands
 ```
 
-- UI **never knows** image storage location. Always calls `getImageUrl(key)` / `ImageService`.
-- Product data (including image) comes from repository, not directly via Firestore/API.
-- Migrasi image storage hanya perlu ganti config/env di storage.ts, bukan rewrite frontend.
+- UI **never** talks to Firestore directly — always through the repository interface.
+- Reads are cached by the `Cached*Repository` wrappers.
 
-## Repository Interfaces
+### Image resolution
 
-### ProductRepository (current)
-```typescript
-import { Product } from '../types/product';
-export type ProductPayload = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
-export interface ProductRepository {
-  getAll(): Promise<Product[]>;
-  getById(id: string): Promise<Product | null>;
-  create(payload: ProductPayload): Promise<Product>;
-  update(id: string, payload: Partial<ProductPayload>): Promise<Product>;
-  delete(id: string): Promise<void>;
-}
+All display components go through `ImageService` / `getImageUrl` (`src/utils/imageUrl.ts`):
+
+- Key starts with `http(s)://` → **pass-through** (ImageKit CDN URL, stored as-is).
+- Any other key → treated as a local path (served from Firebase Hosting).
+
+```
+getImageUrl("assets/images/products/television/pld-24v1855.jpg")  → "/assets/images/products/television/pld-24v1855.jpg"
+getImageUrl("https://ik.imagekit.io/elvanelectronic/...")         → (unchanged)
 ```
 
-### CategoryRepository
-```typescript
-export interface CategoryRepository {
-  getAll(): Promise<Category[]>;
-  getById(id: string): Promise<Category | null>;
-}
+This is what makes the hybrid local+ImageKit setup invisible to the UI.
+
+### Admin image upload flow
+
+```
+ProductForm selects a file
+  → ① GET {VITE_IMAGEKIT_AUTH_ENDPOINT}/signature   (Cloudflare Worker; Origin allowlist enforced)
+  → ② POST file → https://upload.imagekit.io/api/v1/files/upload
+       folder: products/{category}/   fileName: {slug}.{ext}   useUniqueFileName: true
+  → ③ full ImageKit URL stored into form.images[i]
+  → submit → product written to Firestore (requires admin auth)
 ```
 
-## Image Storage Abstraction
-
-- Image disimpan di `public/assets/images/products/...` (local dev/demo)
-- Product hanya simpan array string image keys, misal `assets/images/products/refrigerator/Kulkas1.webp`
-- Saat migrasi ke R2/cloud: upload file ke bucket, pakai key sama
-- `storage.ts` + config/env akan resolve ke URL lokal atau CDN sesuai mode
-- Semua akses image di UI selalu lewat `ImageService` / `getImageUrl`, tidak pernah hardcoded.
-- Produk tetap portable, migrasi semudah ganti config/env
-
-## Admin CRUD (fitur minimal/MVP)
-
-- /admin           — dashboard, list produk, tombol edit/hapus, tombol tambah
-- /admin/products/new       — tambah produk
-- /admin/products/:id/edit — edit produk
-- Form complete: semua field, images (array key, manual input, reorder, set primary)
-- Tidak ada upload gambar (image key manual, siap migrasi)
-- Semua operasi CRUD lewat repository
-- Fitur advanced (upload image, auth, kategori CRUD, dll) siap untuk backward-compatible penambahan
+- The **private key never leaves the Worker** (`IMAGEKIT_PRIVATE_KEY` Cloudflare secret + local `.dev.vars`).
+- Swapping the signature backend (Worker → VPS) = change `VITE_IMAGEKIT_AUTH_ENDPOINT` and keep the `GET /signature → { token, expire, signature }` contract.
 
 ## Routing
 
-| Path                        | Page / Feature                 |
-|-----------------------------|--------------------------------|
-| /                           | Katalog produk                 |
-| /product/:id                | Halaman detail                 |
-| /admin                      | Dashboard admin (produk)       |
-| /admin/products/new         | Tambah produk                  |
-| /admin/products/:id/edit    | Edit produk                    |
-| *                           | 404                            |
+| Path | Page / Feature |
+|---|---|
+| `/` | Public product catalog |
+| `/product/:id` | Product detail |
+| `/admin/login` | Admin login (Firebase Auth, email/password) |
+| `/admin` | Admin dashboard (products tab, pagination, search) |
+| `/admin/products/new` · `/admin/products/:id/edit` | Product form (incl. ImageKit upload) |
+| `/admin/categories` · `/admin/categories/new` · `/admin/categories/:id/edit` | Category CRUD |
+| `/admin/brands` · `/admin/brands/new` · `/admin/brands/:id/edit` | Brand CRUD |
+| `*` | 404 |
 
-## Migrasi dan Integrasi
+`AdminLayout` redirects to `/admin/login` when unauthenticated. Admin routes are lazy-loaded; Vite splits `vendor` and `firebase` into separate chunks.
 
-- Untuk ganti backend (misal dari mock → Firebase/REST), cukup buat class baru (implementasi `ProductRepository`), dan swap di `providers.tsx`:
-  ```ts
-  const productRepository = new FirebaseProductRepository(); // atau ApiProductRepository
-  ```
-- Tidak perlu ubah UI, service, atau form admin.
-- Untuk storage migrasi: image key tetap (termasuk subfolder/category), hanya upload ke cloud dan ganti config/env
+## Firestore & Security Rules
+
+Rules in `firestore.rules` cover three collections — `products`, `categories`, `brands`:
+
+- `read`: public.
+- `create/update/delete`: require `request.auth != null`.
+
+Deploy after editing: `firebase deploy --only firestore:rules`.
+
+> Note: `scripts/seed.cjs` uses the Firebase Admin SDK (service account) and therefore **bypasses rules**. Seeding data into Firestore from the console/dashboard has the same effect — normal for a server-side seed path.
+
+## Migrating / Extending
+
+- **New backend**: add e.g. `src/data/api/api-product.repository.ts` implementing `ProductRepository`, swap in `providers.tsx`.
+- **New data source**: same pattern for category/brand.
+- **Image storage**: UI only ever deals with image *values* (local path or full URL). Uploads currently target ImageKit; pointing elsewhere means changing `src/services/imagekit.ts` — display code stays untouched.
+- **Custom domain / VPS move**:
+  - FE auth endpoint → change `VITE_IMAGEKIT_AUTH_ENDPOINT`.
+  - Worker `ALLOWED_ORIGINS` in `imagekit-auth-worker/wrangler.jsonc` → add the FE origin.
+  - Firestore → configure the new Firebase project (or new repository impl).
 
 ## Tech Stack
-- **React 18** — UI library
-- **TypeScript** — Type safety everywhere
-- **Vite 5** — Dev/build tool
-- **Tailwind CSS 3** — Atomic CSS styling
-- **React Router 6** — Routing
-- **Zero UI frameworks** — Semua komponen atom/molekul mandiri
 
-## Development
-
-```bash
-npm install
-npm run dev      # Jalankan dev server
-npm run build    # TypeScript check + production build
-npm run preview  # Preview
-```
+| Layer | Tech |
+|---|---|
+| UI | React 18, TypeScript, Tailwind CSS 3 |
+| Build | Vite 5 (manual chunking: vendor + firebase) |
+| Routing | React Router 7 |
+| Data | Firebase Firestore (web SDK v12) |
+| Auth | Firebase Authentication (email/password) |
+| Images | ImageKit (upload + CDN) |
+| Upload signature | Cloudflare Worker (`imagekit-auth-worker`) |
+| Hosting | Firebase Hosting (statics) · Cloudflare Workers (signature) |
+| Seed/tooling | firebase-admin, Node scripts (`scripts/`) |
