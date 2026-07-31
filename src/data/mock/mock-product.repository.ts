@@ -94,10 +94,6 @@ const mockProducts: Product[] = [
   },
 ];
 
-function generateId(): string {
-  return `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-}
-
 const DEFAULT_LIMIT = 24;
 
 function sortProducts(products: Product[], sort: SortOption): Product[] {
@@ -169,9 +165,10 @@ export class MockProductRepository implements ProductRepository {
 
   async create(payload: ProductPayload): Promise<Product> {
     const now = new Date().toISOString();
+    const id = payload.id || `prod-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const product: Product = {
       ...payload,
-      id: generateId(),
+      id,
       createdAt: now,
       updatedAt: now,
     };

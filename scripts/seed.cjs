@@ -26,12 +26,64 @@ admin.initializeApp({
 const { getFirestore } = require('firebase-admin/firestore');
 const db = getFirestore();
 
+function shortHash(input, length) {
+  length = length || 6;
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36).slice(0, length);
+}
+
+function generateProductId(brandSlug, categorySlug, name) {
+  const hash = shortHash(brandSlug + '-' + categorySlug + '-' + name);
+  return brandSlug + '-' + categorySlug + '-' + hash;
+}
+
+const brands = [
+  // From existing products
+  { id: 'polytron', name: 'Polytron', slug: 'polytron' },
+  { id: 'aqua', name: 'Aqua', slug: 'aqua' },
+  { id: 'toshiba', name: 'Toshiba', slug: 'toshiba' },
+  { id: 'panasonic', name: 'Panasonic', slug: 'panasonic' },
+  { id: 'electrolux', name: 'Electrolux', slug: 'electrolux' },
+  { id: 'samsung', name: 'Samsung', slug: 'samsung' },
+  { id: 'sharp', name: 'Sharp', slug: 'sharp' },
+  { id: 'lg', name: 'LG', slug: 'lg' },
+  { id: 'juki', name: 'JUKI', slug: 'juki' },
+  { id: 'typical', name: 'Typical', slug: 'typical' },
+  { id: 'siruba', name: 'SIRUBA', slug: 'siruba' },
+  // Common Indonesian electronic brands
+  { id: 'sony', name: 'Sony', slug: 'sony' },
+  { id: 'philips', name: 'Philips', slug: 'philips' },
+  { id: 'haier', name: 'Haier', slug: 'haier' },
+  { id: 'sanken', name: 'Sanken', slug: 'sanken' },
+  { id: 'denpoo', name: 'Denpoo', slug: 'denpoo' },
+  { id: 'changhong', name: 'Changhong', slug: 'changhong' },
+  { id: 'coocaa', name: 'Coocaa', slug: 'coocaa' },
+  { id: 'akari', name: 'Akari', slug: 'akari' },
+  { id: 'midea', name: 'Midea', slug: 'midea' },
+  { id: 'hisense', name: 'Hisense', slug: 'hisense' },
+  { id: 'tcl', name: 'TCL', slug: 'tcl' },
+  { id: 'xiaomi', name: 'Xiaomi', slug: 'xiaomi' },
+  { id: 'advan', name: 'Advan', slug: 'advan' },
+  { id: 'gea', name: 'GEA', slug: 'gea' },
+  { id: 'modena', name: 'Modena', slug: 'modena' },
+  { id: 'miyako', name: 'Miyako', slug: 'miyako' },
+  { id: 'oxone', name: 'Oxone', slug: 'oxone' },
+  { id: 'kirin', name: 'Kirin', slug: 'kirin' },
+  { id: 'singer', name: 'Singer', slug: 'singer' },
+  { id: 'butterfly', name: 'Butterfly', slug: 'butterfly' },
+];
+
 const products = [
 // ================= TELEVISION =================
   {
     name: 'Polytron PLD-24V1855 24" HD Ready Digital TV',
     slug: 'pld-24v1855',
-    brand: 'Polytron',
+    brand: 'polytron',
     price: 1350000,
     description: 'Digital TV 24 Inch Polytron HD Ready PLD-24V1855 / PLD-24V1853/Y.',
     category: 'television',
@@ -42,7 +94,7 @@ const products = [
   {
     name: 'Polytron PLD-24V123 24" HD Ready Digital TV',
     slug: 'pld-24v123',
-    brand: 'Polytron',
+    brand: 'polytron',
     price: 1300000,
     description: 'Digital TV 24 Inch Polytron HD Ready PLD-24V123.',
     category: 'television',
@@ -53,7 +105,7 @@ const products = [
   {
     name: 'Polytron PLD-24TV1855 24" HD Ready Cinemax Sound Tower',
     slug: 'pld-24tv1853',
-    brand: 'Polytron',
+    brand: 'polytron',
     price: 1550000,
     description: 'LED TV 24 Inch Polytron HD Ready Cinemax Sound Tower PLD-24TV1855 / PLD-24TV1855/Y.',
     category: 'television',
@@ -64,7 +116,7 @@ const products = [
   {
     name: 'Polytron PLD-32V1853 32" HD Ready Digital TV',
     slug: 'pld-32v1853',
-    brand: 'Polytron',
+    brand: 'polytron',
     price: 1950000,
     description: 'LED TV 32 Inch Polytron HD Ready Digital TV PLD-32V1853.',
     category: 'television',
@@ -75,7 +127,7 @@ const products = [
   {
     name: 'Polytron PLD-32TV1755 32" HD Ready TV',
     slug: 'pld-32tv1755',
-    brand: 'Polytron',
+    brand: 'polytron',
     price: 2250000,
     description: 'LED TV 32 Inch Polytron HD Ready TV PLD-32TV1755 dengan kualitas gambar jernih dan tajam.',
     category: 'television',
@@ -84,218 +136,221 @@ const products = [
     isActive: true,
   },
 
-  // {
-  //   name: 'Polytron PLD-32RG5059 32" Full HD Google TV',
-  //   slug: 'pld-32rg5059',
-  //   brand: 'Polytron',
-  //   price: 2650000,
-  //   description: 'LED TV 32 Inch Polytron Full HD Google TV PLD-32RG5059 dengan akses aplikasi Google.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-32rg5059.jpg'],
-  //   rating: { rate: 4.5, count: 145 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-32RG9059 32" HD Ready Google TV',
-  //   slug: 'pld-32rg9059',
-  //   brand: 'Polytron',
-  //   price: 3100000,
-  //   description: 'LED TV 32 Inch Polytron HD Ready Google TV PLD-32RG9059 dengan fitur smart casting.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-32rg9059.jpg'],
-  //   rating: { rate: 4.3, count: 98 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-32RG5058 32" Google TV',
-  //   slug: 'pld-32rg5058',
-  //   brand: 'Polytron',
-  //   price: 2850000,
-  //   description: 'LED TV 32 Inch Polytron Google TV PLD-32RG5058.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-32rg5058.jpg'],
-  //   rating: { rate: 4.4, count: 115 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-32CV2269 32" Smart TV',
-  //   slug: 'pld-32cv2269',
-  //   brand: 'Polytron',
-  //   price: 2450000,
-  //   description: 'LED TV 32 Inch Polytron Smart TV PLD-32CV2269.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-32cv2269.jpg'],
-  //   rating: { rate: 4.3, count: 90 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-32TG5055 32" HD Google TV Tower Speaker',
-  //   slug: 'pld-32tg5055',
-  //   brand: 'Polytron',
-  //   price: 3250000,
-  //   description: 'LED TV 32 Inch Polytron HD Google TV PLD-32TG5055 dilengkapi Tower Speaker.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-32tg5055.jpg'],
-  //   rating: { rate: 4.6, count: 167 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-32BG5058 32" HD Google TV Soundbar',
-  //   slug: 'pld-32bg5058',
-  //   brand: 'Polytron',
-  //   price: 3350000,
-  //   description: 'LED TV 32 Inch Polytron HD Google TV PLD-32BG5058 dengan Soundbar terintegrasi.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-32bg5058.jpg'],
-  //   rating: { rate: 4.5, count: 134 },
-  //   isActive: true,
-  // },
-  // {
-  //   price: 3400000,
-  //   description: 'LED 40 Inch Polytron Smart TV PLD-40CV8969 dengan tampilan layar luas dan jernih.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-40cv8969.jpg'],
-  //   rating: { rate: 4.4, count: 112 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-40RG9059 40" Google TV',
-  //   slug: 'pld-40rg9059',
-  //   brand: 'Polytron',
-  //   price: 3750000,
-  //   description: 'LED TV 40 Inch Polytron Google TV PLD-40RG9059 dengan resolusi tinggi.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-40rg9059.jpg'],
-  //   rating: { rate: 4.5, count: 156 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-43V8853 43" Full HD TV',
-  //   slug: 'pld-43v8853',
-  //   brand: 'Polytron',
-  //   price: 3400000,
-  //   description: 'LED TV 43 Inch Polytron Full HD PLD-43V8853 dengan desain bezel-less.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-43v8853.jpg'],
-  //   rating: { rate: 4.3, count: 189 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-43CV8869 43" Smart TV Full HD',
-  //   slug: 'pld-43cv8869',
-  //   brand: 'Polytron',
-  //   price: 3850000,
-  //   description: 'LED TV 43 Inch Smart TV Polytron Full HD PLD-43CV8869 dengan fitur mirroring.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-43cv8869.jpg'],
-  //   rating: { rate: 4.6, count: 210 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-43RG5059 43" Google TV',
-  //   slug: 'pld-43rg5059',
-  //   brand: 'Polytron',
-  //   price: 4250000,
-  //   description: 'LED TV 43 Inch Polytron Google TV PLD-43RG5059 dengan akses ribuan aplikasi.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-43rg5059.jpg'],
-  //   rating: { rate: 4.5, count: 178 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-43TG5055 43" Google TV Full HD',
-  //   slug: 'pld-43tg5055',
-  //   brand: 'Polytron',
-  //   price: 4550000,
-  //   description: 'LED TV 43 Inch Polytron Google TV Full HD PLD-43TG5055 dengan Tower Speaker.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-43tg5055.jpg'],
-  //   rating: { rate: 4.7, count: 234 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-43BG5058 43" Google TV FHD',
-  //   slug: 'pld-43bg5058',
-  //   brand: 'Polytron',
-  //   price: 4650000,
-  //   description: 'LED TV 43 Inch Polytron Google TV FHD PLD-43BG5058 dilengkapi Soundbar.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-43bg5058.jpg'],
-  //   rating: { rate: 4.6, count: 195 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-43UG5059 43" 4K UHD Google TV',
-  //   slug: 'pld-43ug5059',
-  //   brand: 'Polytron',
-  //   price: 5100000,
-  //   description: 'LED TV 43 Inch Polytron 4K UHD Google TV PLD-43UG5059 dengan resolusi ultra tinggi.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-43ug5059.jpg'],
-  //   rating: { rate: 4.8, count: 267 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-43BUG5058 43" 4K UHD Google TV Soundbar',
-  //   slug: 'pld-43bug5058',
-  //   brand: 'Polytron',
-  //   price: 5500000,
-  //   description: 'LED TV 43 Inch Polytron 4K UHD Google TV Cinemax Soundbar PLD-43BUG5058.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-43bug5058.jpg'],
-  //   rating: { rate: 4.8, count: 289 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-50UG5059 50" 4K UHD Smart Google TV',
-  //   slug: 'pld-50ug5059',
-  //   brand: 'Polytron',
-  //   price: 6100000,
-  //   description: 'LED TV 50 Inch Polytron Smart Google TV 4K UHD PLD-50UG5059 layar lebar sinematik.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-50ug5059.jpg'],
-  //   rating: { rate: 4.7, count: 212 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-50QG9059 50" EQLED 4K UHD Google TV',
-  //   slug: 'pld-50qg9059',
-  //   brand: 'Polytron',
-  //   price: 6300000,
-  //   description: 'LED TV 50 Inch Polytron Google TV EQLED 4K UHD PLD-50QG9059 dengan warna lebih hidup.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-50qg9059.jpg'],
-  //   rating: { rate: 4.9, count: 305 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-50BUG5058 50" 4K UHD Smart Google TV',
-  //   slug: 'pld-50bug5058',
-  //   brand: 'Polytron',
-  //   price: 6700000,
-  //   description: 'LED TV 50 Inch Polytron Smart Google TV 4K UHD PLD-50BUG5058 dengan Soundbar.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-50bug5058.jpg'],
-  //   rating: { rate: 4.8, count: 256 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PLD-55UG5059 55" 4K UHD Smart Google TV',
-  //   slug: 'pld-55ug5059',
-  //   brand: 'Polytron',
-  //   price: 7000000,
-  //   description: 'LED TV 55 Inch Polytron Smart Google TV 4K UHD PLD-55UG5059 pengalaman bioskop di rumah.',
-  //   category: 'television',
-  //   images: ['assets/images/products/television/pld-55ug5059.jpg'],
-  //   rating: { rate: 4.9, count: 340 },
-  //   isActive: true,
-  // },
+  {
+    name: 'Polytron PLD-32RG5059 32" Full HD Google TV',
+    slug: 'pld-32rg5059',
+    brand: 'polytron',
+    price: 2650000,
+    description: 'LED TV 32 Inch Polytron Full HD Google TV PLD-32RG5059 dengan akses aplikasi Google.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-32rg5059.jpg'],
+    rating: { rate: 4.5, count: 145 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-32RG9059 32" HD Ready Google TV',
+    slug: 'pld-32rg9059',
+    brand: 'polytron',
+    price: 3100000,
+    description: 'LED TV 32 Inch Polytron HD Ready Google TV PLD-32RG9059 dengan fitur smart casting.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-32rg9059.jpg'],
+    rating: { rate: 4.3, count: 98 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-32RG5058 32" Google TV',
+    slug: 'pld-32rg5058',
+    brand: 'polytron',
+    price: 2850000,
+    description: 'LED TV 32 Inch Polytron Google TV PLD-32RG5058.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-32rg5058.jpg'],
+    rating: { rate: 4.4, count: 115 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-32CV2269 32" Smart TV',
+    slug: 'pld-32cv2269',
+    brand: 'polytron',
+    price: 2450000,
+    description: 'LED TV 32 Inch Polytron Smart TV PLD-32CV2269.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-32cv2269.jpg'],
+    rating: { rate: 4.3, count: 90 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-32TG5055 32" HD Google TV Tower Speaker',
+    slug: 'pld-32tg5055',
+    brand: 'polytron',
+    price: 3250000,
+    description: 'LED TV 32 Inch Polytron HD Google TV PLD-32TG5055 dilengkapi Tower Speaker.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-32tg5055.jpg'],
+    rating: { rate: 4.6, count: 167 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-32BG5058 32" HD Google TV Soundbar',
+    slug: 'pld-32bg5058',
+    brand: 'polytron',
+    price: 3350000,
+    description: 'LED TV 32 Inch Polytron HD Google TV PLD-32BG5058 dengan Soundbar terintegrasi.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-32bg5058.jpg'],
+    rating: { rate: 4.5, count: 134 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-40CV8969 40" Smart TV',
+    slug: 'pld-40cv8969',
+    brand: 'polytron',
+    price: 3400000,
+    description: 'LED 40 Inch Polytron Smart TV PLD-40CV8969 dengan tampilan layar luas dan jernih.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-40cv8969.jpg'],
+    rating: { rate: 4.4, count: 112 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-40RG9059 40" Google TV',
+    slug: 'pld-40rg9059',
+    brand: 'polytron',
+    price: 3750000,
+    description: 'LED TV 40 Inch Polytron Google TV PLD-40RG9059 dengan resolusi tinggi.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-40rg9059.jpg'],
+    rating: { rate: 4.5, count: 156 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-43V8853 43" Full HD TV',
+    slug: 'pld-43v8853',
+    brand: 'polytron',
+    price: 3400000,
+    description: 'LED TV 43 Inch Polytron Full HD PLD-43V8853 dengan desain bezel-less.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-43v8853.jpg'],
+    rating: { rate: 4.3, count: 189 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-43CV8869 43" Smart TV Full HD',
+    slug: 'pld-43cv8869',
+    brand: 'polytron',
+    price: 3850000,
+    description: 'LED TV 43 Inch Smart TV Polytron Full HD PLD-43CV8869 dengan fitur mirroring.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-43cv8869.jpg'],
+    rating: { rate: 4.6, count: 210 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-43RG5059 43" Google TV',
+    slug: 'pld-43rg5059',
+    brand: 'polytron',
+    price: 4250000,
+    description: 'LED TV 43 Inch Polytron Google TV PLD-43RG5059 dengan akses ribuan aplikasi.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-43rg5059.jpg'],
+    rating: { rate: 4.5, count: 178 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-43TG5055 43" Google TV Full HD',
+    slug: 'pld-43tg5055',
+    brand: 'polytron',
+    price: 4550000,
+    description: 'LED TV 43 Inch Polytron Google TV Full HD PLD-43TG5055 dengan Tower Speaker.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-43tg5055.jpg'],
+    rating: { rate: 4.7, count: 234 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-43BG5058 43" Google TV FHD',
+    slug: 'pld-43bg5058',
+    brand: 'polytron',
+    price: 4650000,
+    description: 'LED TV 43 Inch Polytron Google TV FHD PLD-43BG5058 dilengkapi Soundbar.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-43bg5058.jpg'],
+    rating: { rate: 4.6, count: 195 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-43UG5059 43" 4K UHD Google TV',
+    slug: 'pld-43ug5059',
+    brand: 'polytron',
+    price: 5100000,
+    description: 'LED TV 43 Inch Polytron 4K UHD Google TV PLD-43UG5059 dengan resolusi ultra tinggi.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-43ug5059.jpg'],
+    rating: { rate: 4.8, count: 267 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-43BUG5058 43" 4K UHD Google TV Soundbar',
+    slug: 'pld-43bug5058',
+    brand: 'polytron',
+    price: 5500000,
+    description: 'LED TV 43 Inch Polytron 4K UHD Google TV Cinemax Soundbar PLD-43BUG5058.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-43bug5058.jpg'],
+    rating: { rate: 4.8, count: 289 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-50UG5059 50" 4K UHD Smart Google TV',
+    slug: 'pld-50ug5059',
+    brand: 'polytron',
+    price: 6100000,
+    description: 'LED TV 50 Inch Polytron Smart Google TV 4K UHD PLD-50UG5059 layar lebar sinematik.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-50ug5059.jpg'],
+    rating: { rate: 4.7, count: 212 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-50QG9059 50" EQLED 4K UHD Google TV',
+    slug: 'pld-50qg9059',
+    brand: 'polytron',
+    price: 6300000,
+    description: 'LED TV 50 Inch Polytron Google TV EQLED 4K UHD PLD-50QG9059 dengan warna lebih hidup.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-50qg9059.jpg'],
+    rating: { rate: 4.9, count: 305 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-50BUG5058 50" 4K UHD Smart Google TV',
+    slug: 'pld-50bug5058',
+    brand: 'polytron',
+    price: 6700000,
+    description: 'LED TV 50 Inch Polytron Smart Google TV 4K UHD PLD-50BUG5058 dengan Soundbar.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-50bug5058.jpg'],
+    rating: { rate: 4.8, count: 256 },
+    isActive: true,
+  },
+  {
+    name: 'Polytron PLD-55UG5059 55" 4K UHD Smart Google TV',
+    slug: 'pld-55ug5059',
+    brand: 'polytron',
+    price: 7000000,
+    description: 'LED TV 55 Inch Polytron Smart Google TV 4K UHD PLD-55UG5059 pengalaman bioskop di rumah.',
+    category: 'television',
+    images: ['assets/images/products/television/pld-55ug5059.jpg'],
+    rating: { rate: 4.9, count: 340 },
+    isActive: true,
+  },
 
   // ================= WASHING MACHINE =================
     {
       name: 'Aqua AQW-89DD 1 Tabung 8 Kg Top Loading',
       slug: 'aqw-89dd',
-      brand: 'Aqua',
+      brand: 'aqua',
       price: 3300000,
       description: '',
       category: 'washing_machine',
@@ -306,7 +361,7 @@ const products = [
     {
       name: 'Toshiba AW-J800AN 1 Tabung 8 Kg Top Loading',
       slug: 'aw-j800an',
-      brand: 'Toshiba',
+      brand: 'toshiba',
       price: 3150000,
       description: '',
       category: 'washing_machine',
@@ -317,7 +372,7 @@ const products = [
     {
       name: 'Toshiba AW-K900AN 1 Tabung 9 Kg Top Loading',
       slug: 'aw-k900dn',
-      brand: 'Toshiba',
+      brand: 'toshiba',
       price: 3600000,
       description: '',
       category: 'washing_machine',
@@ -329,7 +384,7 @@ const products = [
     {
         name: 'Panasonic NA-F90JSZ1H Mesin Cuci Top Loading 9 Kg',
         slug: 'na-f90jsz1h',
-        brand: 'Panasonic',
+        brand: 'panasonic',
         price: 4100000,
         description: '',
         category: 'washing_machine',
@@ -340,7 +395,7 @@ const products = [
     {
         name: 'Toshiba AW-J1000FN Mesin Cuci 1 Tabung 9 Kg Top Loading',
         slug: 'aw-j1000fn',
-        brand: 'Toshiba',
+        brand: 'toshiba',
         price: 3850000,
         description: '',
         category: 'washing_machine',
@@ -351,7 +406,7 @@ const products = [
     {
         name: 'Electrolux EWT-8588H1WB Mesin Cuci 1 Tabung 8.5 Kg Top Loading',
         slug: 'ewt-8588h1wb',
-        brand: 'Electrolux',
+        brand: 'electrolux',
         price: 4150000,
         description: '',
         category: 'washing_machine',
@@ -362,7 +417,7 @@ const products = [
     {
         name: 'Panasonic NA-FD95X1BSG Mesin Cuci 1 Tabung 9.5 Kg Top Loading',
         slug: 'na-fd95x1bsg',
-        brand: 'Panasonic',
+        brand: 'panasonic',
         price: 5650000,
         description: '',
         category: 'washing_machine',
@@ -373,7 +428,7 @@ const products = [
     {
         name: 'Polytron PAW-9028W Mesin Cuci 1 Tabung 9 Kg Top Loading',
         slug: 'paw-9028w',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2900000,
         description: '',
         category: 'washing_machine',
@@ -384,7 +439,7 @@ const products = [
     {
         name: 'Polytron PAW-9029TS Mesin Cuci 1 Tabung 9 Kg Top Loading',
         slug: 'paw-9029ts',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2900000,
         description: '',
         category: 'washing_machine',
@@ -395,7 +450,7 @@ const products = [
     {
         name: 'Polytron PAW-1028Y Mesin Cuci 1 Tabung 10 Kg Top Loading',
         slug: 'paw-1028y',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 3150000,
         description: '',
         category: 'washing_machine',
@@ -406,7 +461,7 @@ const products = [
     {
         name: 'Samsung WA-90H4200SG Mesin Cuci 1 Tabung 9 Kg Top Loading',
         slug: 'wa-90h4200sg',
-        brand: 'Samsung',
+        brand: 'samsung',
         price: 3500000,
         description: '',
         category: 'washing_machine',
@@ -417,7 +472,7 @@ const products = [
     {
         name: 'Panasonic NA-F80MB1WSG Mesin Cuci 1 Tabung 8 Kg Top Loading',
         slug: 'na-f80mb1wsg',
-        brand: 'Panasonic',
+        brand: 'panasonic',
         price: 3800000,
         description: '',
         category: 'washing_machine',
@@ -429,7 +484,7 @@ const products = [
     {
         name: 'Polytron PAW-9029TY Mesin Cuci 1 Tabung 9 Kg Top Loading',
         slug: 'paw-9029ty',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 3340000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
         category: 'washing_machine',
@@ -440,7 +495,7 @@ const products = [
     {
         name: 'Polytron PAW-8527M Mesin Cuci 1 Tabung 8.5 Kg Top Loading',
         slug: 'paw-8527m',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2450000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 8.5 kg dari brand Polytron, tipe top loading.',
         category: 'washing_machine',
@@ -451,7 +506,7 @@ const products = [
     {
         name: 'Aqua QW-1230HT Mesin Cuci 2 Tabung 12 Kg',
         slug: 'qw-1230ht',
-        brand: 'Aqua',
+        brand: 'aqua',
         price: 3050000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 12 kg dari brand Aqua.',
         category: 'washing_machine',
@@ -462,7 +517,7 @@ const products = [
     {
         name: 'Panasonic NA-F105MB1WS Mesin Cuci 1 Tabung 10.5 Kg Top Loading',
         slug: 'na-f105mb1ws',
-        brand: 'Panasonic',
+        brand: 'panasonic',
         price: 4800000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 10.5 kg dari brand Panasonic, tipe top loading.',
         category: 'washing_machine',
@@ -473,7 +528,7 @@ const products = [
     {
         name: 'Panasonic NA-FD135X3BS Mesin Cuci 1 Tabung 13.5 Kg Top Loading',
         slug: 'na-fd135x3bs',
-        brand: 'Panasonic',
+        brand: 'panasonic',
         price: 6600000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 13.5 kg dari brand Panasonic, tipe top loading.',
         category: 'washing_machine',
@@ -484,7 +539,7 @@ const products = [
     {
         name: 'Panasonic NA-F72MB1WSG Mesin Cuci 1 Tabung 7.2 Kg Top Loading',
         slug: 'na-f72mb1wsg',
-        brand: 'Panasonic',
+        brand: 'panasonic',
         price: 3400000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 7.2 kg dari brand Panasonic, tipe top loading.',
         category: 'washing_machine',
@@ -495,7 +550,7 @@ const products = [
     {
         name: 'Polytron PAW-90517WB/WM Mesin Cuci 1 Tabung 9 Kg Top Loading',
         slug: 'paw-90517wb-wm',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2800000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
         category: 'washing_machine',
@@ -506,7 +561,7 @@ const products = [
     {
         name: 'Aqua AQW-77D-H Mesin Cuci 1 Tabung 7 Kg Twin Tub',
         slug: 'aqw-77d-h',
-        brand: 'Aqua',
+        brand: 'aqua',
         price: 2350000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 7 kg dari brand Aqua, tipe twin tub.',
         category: 'washing_machine',
@@ -518,7 +573,7 @@ const products = [
     {
         name: 'Polytron PWM-8072N/B Mesin Cuci 2 Tabung 8 Kg Twin Tub',
         slug: 'pwm-8072n-b',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2050000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 8 kg dari brand Polytron, tipe twin tub.',
         category: 'washing_machine',
@@ -529,7 +584,7 @@ const products = [
     {
         name: 'Polytron PWM-9072N/B Mesin Cuci 2 Tabung 9 Kg Twin Tub',
         slug: 'pwm-9072n-b',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2300000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 9 kg dari brand Polytron, tipe twin tub.',
         category: 'washing_machine',
@@ -540,7 +595,7 @@ const products = [
     {
         name: 'Polytron PAW-7029TS Mesin Cuci 1 Tabung 7 Kg Top Loading',
         slug: 'paw-7029ts',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2500000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 7 kg dari brand Polytron, tipe top loading.',
         category: 'washing_machine',
@@ -551,7 +606,7 @@ const products = [
     {
         name: 'Polytron PAW-8029TS Mesin Cuci 1 Tabung 8 Kg Top Loading',
         slug: 'paw-8029ts',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 3100000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 8 kg dari brand Polytron, tipe top loading.',
         category: 'washing_machine',
@@ -562,7 +617,7 @@ const products = [
     {
         name: 'Polytron PWM-8081 Mesin Cuci 2 Tabung 8 Kg',
         slug: 'pwm-8081',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 1750000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 8 kg dari brand Polytron.',
         category: 'washing_machine',
@@ -573,7 +628,7 @@ const products = [
     {
         name: 'Polytron PWM-9076 Mesin Cuci 2 Tabung 9 Kg Twin Tub',
         slug: 'pwm-9076',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 1850000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 9 kg dari brand Polytron, tipe twin tub.',
         category: 'washing_machine',
@@ -584,8 +639,8 @@ const products = [
     {
         name: 'Polytron PWM-7081 Mesin Cuci 2 Tabung 7 Kg',
         slug: 'pwm-7081',
-        brand: 'Polytron',
-        price: 1900000,
+        brand: 'polytron',
+        price: 1950000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 7 kg dari brand Polytron.',
         category: 'washing_machine',
         images: ['assets/images/products/washing_machine/pwm-7081.webp'],
@@ -593,20 +648,9 @@ const products = [
         isActive: true,
     },
     {
-        name: 'Polytron PAW-9028W Mesin Cuci 1 Tabung 9 Kg Top Loading',
-        slug: 'paw-9028w',
-        brand: 'Polytron',
-        price: 35275000000000,
-        description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
-        category: 'washing_machine',
-        images: ['assets/images/products/washing_machine/paw-9028w.webp'],
-        rating: { rate: 4.2, count: 88 },
-        isActive: true,
-    },
-    {
         name: 'Polytron PAW-9028Y Mesin Cuci 1 Tabung 9 Kg Top Loading',
         slug: 'paw-9028y',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 3000000,
         description: 'Mesin cuci 1 tabung dengan kapasitas 9 kg dari brand Polytron, tipe top loading.',
         category: 'washing_machine',
@@ -618,7 +662,7 @@ const products = [
     {
         name: 'Polytron PWM-1081 Mesin Cuci 2 Tabung 10 Kg',
         slug: 'pwm-1081',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2050000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 10 kg dari brand Polytron.',
         category: 'washing_machine',
@@ -629,7 +673,7 @@ const products = [
     {
         name: 'Polytron PWM-7073P/B Mesin Cuci 2 Tabung 7 Kg Twin Tub',
         slug: 'pwm-7073p-b',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 1900000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 7 kg dari brand Polytron, tipe twin tub.',
         category: 'washing_machine',
@@ -638,20 +682,9 @@ const products = [
         isActive: true,
     },
     {
-        name: 'Polytron PWM-7081 Mesin Cuci 2 Tabung 7 Kg',
-        slug: 'pwm-7081',
-        brand: 'Polytron',
-        price: 1950000,
-        description: 'Mesin cuci 2 tabung dengan kapasitas 7 kg dari brand Polytron.',
-        category: 'washing_machine',
-        images: ['assets/images/products/washing_machine/pwm-7081.webp'],
-        rating: { rate: 3.9, count: 54 },
-        isActive: true,
-    },
-    {
         name: 'Polytron PWM-8076 Mesin Cuci 2 Tabung 8 Kg Twin Tub',
         slug: 'pwm-8076',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2050000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 8 kg dari brand Polytron, tipe twin tub.',
         category: 'washing_machine',
@@ -662,7 +695,7 @@ const products = [
     {
         name: 'Polytron PWM-9081 Mesin Cuci 2 Tabung 9 Kg',
         slug: 'pwm-9081',
-        brand: 'Polytron',
+        brand: 'polytron',
         price: 2400000,
         description: 'Mesin cuci 2 tabung dengan kapasitas 9 kg dari brand Polytron.',
         category: 'washing_machine',
@@ -673,7 +706,7 @@ const products = [
     {
         name: 'Panasonic NA-W16XG2BNE Mesin Cuci Twin Tub 16 Kg',
         slug: 'na-w16xg2bne',
-        brand: 'Panasonic',
+        brand: 'panasonic',
         price: 4300000,
         description: 'Mesin cuci twin tub dengan kapasitas 16 kg dari brand Panasonic.',
         category: 'washing_machine',
@@ -684,7 +717,7 @@ const products = [
     {
         name: 'LG Mesin Cuci Twin Tub 16 Kg P-1600RTB',
         slug: 'p-1600rtb',
-        brand: 'LG',
+        brand: 'lg',
         price: 3950000,
         description: 'Mesin cuci twin tub dengan kapasitas 16 kg dari brand LG.',
         category: 'washing_machine',
@@ -694,238 +727,238 @@ const products = [
     },
 
   // ================= REFRIGERATOR =================
-  // {
-  //   name: 'Polytron PRB-200Y Kulkas 2 Pintu 166 Liter',
-  //   slug: 'prb-200y',
-  //   brand: 'Polytron',
-  //   price: 3350000,
-  //   description: 'Kulkas 2 Pintu Polytron 166 Liter PRB-200Y dengan teknologi pendingin cepat.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prb-200y.jpg'],
-  //   rating: { rate: 4.5, count: 145 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRB-219B/R Kulkas 2 Pintu 210 Liter',
-  //   slug: 'prb-219br',
-  //   brand: 'Polytron',
-  //   price: 3550000,
-  //   description: 'Kulkas 2 Pintu Polytron 210 Liter PRB-219B/R hemat energi dan awet.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prb-219br.jpg'],
-  //   rating: { rate: 4.4, count: 132 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRB-217TY Kulkas 2 Pintu 176 Liter',
-  //   slug: 'prb-217ty',
-  //   brand: 'Polytron',
-  //   price: 3550000,
-  //   description: 'Kulkas 2 Pintu Polytron 176 Liter PRB-217TY dengan desain elegan.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prb-217ty.jpg'],
-  //   rating: { rate: 4.3, count: 118 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRM-20CLD Kulkas 2 Pintu 160 Liter',
-  //   slug: 'prm-20cld',
-  //   brand: 'Polytron',
-  //   price: 3450000,
-  //   description: 'Kulkas 2 Pintu Polytron 160 Liter PRM-20CLD dengan rak fleksibel.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prm-20cld.jpg'],
-  //   rating: { rate: 4.4, count: 125 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRW-23MNX Kulkas 2 Pintu 220 Liter',
-  //   slug: 'prw-23mnx',
-  //   brand: 'Polytron',
-  //   price: 3750000,
-  //   description: 'Kulkas 2 Pintu Polytron 220 Liter PRW-23MNX dengan fitur fresh keep.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prw-23mnx.jpg'],
-  //   rating: { rate: 4.6, count: 167 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRW-23MO/MTR Kulkas 2 Pintu 220 Liter',
-  //   slug: 'prw-23momtr',
-  //   brand: 'Polytron',
-  //   price: 3800000,
-  //   description: 'Kulkas 2 Pintu Polytron 220 Liter PRW-23MO/MTR dengan pendingin optimal.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prw-23momtr.jpg'],
-  //   rating: { rate: 4.5, count: 154 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRW-25VX Kulkas 2 Pintu 240 Liter',
-  //   slug: 'prw-25vx',
-  //   brand: 'Polytron',
-  //   price: 4150000,
-  //   description: 'Kulkas 2 Pintu Polytron 240 Liter PRW-25VX kapasitas luas untuk keluarga besar.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prw-25vx.jpg'],
-  //   rating: { rate: 4.7, count: 198 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRW-23VX Kulkas 2 Pintu 220 Liter',
-  //   slug: 'prw-23vx',
-  //   brand: 'Polytron',
-  //   price: 4050000,
-  //   description: 'Kulkas 2 Pintu Polytron 220 Liter PRW-23VX dengan teknologi anti bakteri.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prw-23vx.jpg'],
-  //   rating: { rate: 4.6, count: 176 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron PRW-29HB Kulkas 2 Pintu 230 Liter',
-  //   slug: 'prw-29hb',
-  //   brand: 'Polytron',
-  //   price: 4450000,
-  //   description: 'Kulkas 2 Pintu Polytron 230 Liter PRW-29HB dengan desain premium.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/prw-29hb.jpg'],
-  //   rating: { rate: 4.8, count: 212 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Polytron SCN-190 Showcase 1 Pintu 190 Liter',
-  //   slug: 'scn-190',
-  //   brand: 'Polytron',
-  //   price: 3500000,
-  //   description: 'Showcase 1 Pintu Polytron 190 Liter SCN-190 cocok untuk usaha minuman.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/scn-190.jpg'],
-  //   rating: { rate: 4.5, count: 134 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Sharp SCH-170FS Showcase 1 Pintu 170 Liter',
-  //   slug: 'sch-170fs',
-  //   brand: 'Sharp',
-  //   price: 3850000,
-  //   description: 'Showcase 1 Pintu Sharp 170 Liter Display Cooler SCH-170FS dengan lampu LED.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/sch-170fs.jpg'],
-  //   rating: { rate: 4.4, count: 112 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Sharp SCH-210FS Showcase 1 Pintu 200 Liter',
-  //   slug: 'sch-210fs',
-  //   brand: 'Sharp',
-  //   price: 4100000,
-  //   description: 'Showcase 1 Pintu Sharp 200 Liter Display Cooler SCH-210FS pendingin cepat.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/sch-210fs.jpg'],
-  //   rating: { rate: 4.5, count: 145 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Sharp SCH-250FS Showcase 1 Pintu 250 Liter',
-  //   slug: 'sch-250fs',
-  //   brand: 'Sharp',
-  //   price: 4600000,
-  //   description: 'Showcase 1 Pintu Sharp 250 Liter Display Cooler SCH-250FS kapasitas besar.',
-  //   category: 'refrigerator',
-  //   images: ['assets/images/products/refrigerator/sch-250fs.jpg'],
-  //   rating: { rate: 4.6, count: 167 },
-  //   isActive: true,
-  // },
+    {
+        name: 'Polytron PRB-200Y Kulkas 2 Pintu 166 Liter',
+        slug: 'prb-200y',
+        brand: 'polytron',
+        price: 3350000,
+        description: 'Kulkas 2 Pintu Polytron 166 Liter PRB-200Y dengan teknologi pendingin cepat.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prb-200y.jpg'],
+        rating: { rate: 4.5, count: 145 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRB-219B/R Kulkas 2 Pintu 210 Liter',
+        slug: 'prb-219br',
+        brand: 'polytron',
+        price: 3550000,
+        description: 'Kulkas 2 Pintu Polytron 210 Liter PRB-219B/R hemat energi dan awet.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prb-219br.jpg'],
+        rating: { rate: 4.4, count: 132 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRB-217TY Kulkas 2 Pintu 176 Liter',
+        slug: 'prb-217ty',
+        brand: 'polytron',
+        price: 3550000,
+        description: 'Kulkas 2 Pintu Polytron 176 Liter PRB-217TY dengan desain elegan.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prb-217ty.jpg'],
+        rating: { rate: 4.3, count: 118 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRM-20CLD Kulkas 2 Pintu 160 Liter',
+        slug: 'prm-20cld',
+        brand: 'polytron',
+        price: 3450000,
+        description: 'Kulkas 2 Pintu Polytron 160 Liter PRM-20CLD dengan rak fleksibel.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prm-20cld.jpg'],
+        rating: { rate: 4.4, count: 125 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRW-23MNX Kulkas 2 Pintu 220 Liter',
+        slug: 'prw-23mnx',
+        brand: 'polytron',
+        price: 3750000,
+        description: 'Kulkas 2 Pintu Polytron 220 Liter PRW-23MNX dengan fitur fresh keep.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prw-23mnx.jpg'],
+        rating: { rate: 4.6, count: 167 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRW-23MO/MTR Kulkas 2 Pintu 220 Liter',
+        slug: 'prw-23momtr',
+        brand: 'polytron',
+        price: 3800000,
+        description: 'Kulkas 2 Pintu Polytron 220 Liter PRW-23MO/MTR dengan pendingin optimal.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prw-23momtr.jpg'],
+        rating: { rate: 4.5, count: 154 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRW-25VX Kulkas 2 Pintu 240 Liter',
+        slug: 'prw-25vx',
+        brand: 'polytron',
+        price: 4150000,
+        description: 'Kulkas 2 Pintu Polytron 240 Liter PRW-25VX kapasitas luas untuk keluarga besar.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prw-25vx.jpg'],
+        rating: { rate: 4.7, count: 198 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRW-23VX Kulkas 2 Pintu 220 Liter',
+        slug: 'prw-23vx',
+        brand: 'polytron',
+        price: 4050000,
+        description: 'Kulkas 2 Pintu Polytron 220 Liter PRW-23VX dengan teknologi anti bakteri.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prw-23vx.jpg'],
+        rating: { rate: 4.6, count: 176 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron PRW-29HB Kulkas 2 Pintu 230 Liter',
+        slug: 'prw-29hb',
+        brand: 'polytron',
+        price: 4450000,
+        description: 'Kulkas 2 Pintu Polytron 230 Liter PRW-29HB dengan desain premium.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/prw-29hb.jpg'],
+        rating: { rate: 4.8, count: 212 },
+        isActive: true,
+    },
+    {
+        name: 'Polytron SCN-190 Showcase 1 Pintu 190 Liter',
+        slug: 'scn-190',
+        brand: 'polytron',
+        price: 3500000,
+        description: 'Showcase 1 Pintu Polytron 190 Liter SCN-190 cocok untuk usaha minuman.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/scn-190.jpg'],
+        rating: { rate: 4.5, count: 134 },
+        isActive: true,
+    },
+    {
+        name: 'Sharp SCH-170FS Showcase 1 Pintu 170 Liter',
+        slug: 'sch-170fs',
+        brand: 'sharp',
+        price: 3850000,
+        description: 'Showcase 1 Pintu Sharp 170 Liter Display Cooler SCH-170FS dengan lampu LED.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/sch-170fs.jpg'],
+        rating: { rate: 4.4, count: 112 },
+        isActive: true,
+    },
+    {
+        name: 'Sharp SCH-210FS Showcase 1 Pintu 200 Liter',
+        slug: 'sch-210fs',
+        brand: 'sharp',
+        price: 4100000,
+        description: 'Showcase 1 Pintu Sharp 200 Liter Display Cooler SCH-210FS pendingin cepat.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/sch-210fs.jpg'],
+        rating: { rate: 4.5, count: 145 },
+        isActive: true,
+    },
+    {
+        name: 'Sharp SCH-250FS Showcase 1 Pintu 250 Liter',
+        slug: 'sch-250fs',
+        brand: 'sharp',
+        price: 4600000,
+        description: 'Showcase 1 Pintu Sharp 250 Liter Display Cooler SCH-250FS kapasitas besar.',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/sch-250fs.jpg'],
+        rating: { rate: 4.6, count: 167 },
+        isActive: true,
+    },
 
-  // ================= SEWING MACHINE =================
-  // {
-  //   name: 'Mesin Jahit JUKI Japan Import (Second)',
-  //   slug: 'mesin-jahit-juki-japan-import',
-  //   brand: 'JUKI',
-  //   price: 2950000,
-  //   description: 'Mesin Jahit JUKI Japan Import (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
-  //   category: 'sewing_machine',
-  //   images: ['assets/images/products/sewing_machine/mesin-jahit-juki-japan-import.jpg'],
-  //   rating: { rate: 4.6, count: 89 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Mesin Jahit JUKI Taiwan (Second)',
-  //   slug: 'mesin-jahit-juki-taiwan',
-  //   brand: 'JUKI',
-  //   price: 2750000,
-  //   description: 'Mesin Jahit JUKI Taiwan (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
-  //   category: 'sewing_machine',
-  //   images: ['assets/images/products/sewing_machine/mesin-jahit-juki-taiwan.jpg'],
-  //   rating: { rate: 4.5, count: 76 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Mesin Jahit JUKI Daerek (Second)',
-  //   slug: 'mesin-jahit-juki-daerek',
-  //   brand: 'JUKI',
-  //   price: 3100000,
-  //   description: 'Mesin Jahit JUKI Daerek (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
-  //   category: 'sewing_machine',
-  //   images: ['assets/images/products/sewing_machine/mesin-jahit-juki-daerek.jpg'],
-  //   rating: { rate: 4.7, count: 102 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Mesin Jahit Typical GC6150 (Second)',
-  //   slug: 'mesin-jahit-typical-gc6150',
-  //   brand: 'Typical',
-  //   price: 2650000,
-  //   description: 'Mesin Jahit Typical GC6150 (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
-  //   category: 'sewing_machine',
-  //   images: ['assets/images/products/sewing_machine/mesin-jahit-typical-gc6150.jpg'],
-  //   rating: { rate: 4.4, count: 65 },
-  //   isActive: true,
-  // },
-  // {
-  //   name: 'Mesin Obras SIRUBA Import (Second)',
-  //   slug: 'mesin-obras-siruba-import',
-  //   brand: 'SIRUBA',
-  //   price: 3500000,
-  //   description: 'Mesin Obras SIRUBA Import (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
-  //   category: 'sewing_machine',
-  //   images: ['assets/images/products/sewing_machine/mesin-obras-siruba-import.jpg'],
-  //   rating: { rate: 4.8, count: 115 },
-  //   isActive: true,
-  // }
-
-  {
-    name: 'Kulkas 1 Pintu Polytron 150 Liter PRA-15CRX',
-    slug: 'pra-15crx',
-    brand: 'Polytron',
-    price: 2250000,
-    description: 'Kulkas 1 Pintu Polytron 150 Liter',
-    category: 'refrigerator',
-    images: ['assets/images/products/refrigerator/pra-15crx.webp'],
-    rating: { rate: 4.8, count: 115 },
-    isActive: true,
-  },
-  {
-    name: 'Kulkas 1 Pintu Polytron 180 Liter PRA-18MOW/B',
-    slug: 'pra-18mow',
-    brand: 'Polytron',
-    price: 2800000,
-    description: 'Kulkas 1 Pintu Polytron 180 Liter',
-    category: 'refrigerator',
-    images: ['assets/images/products/refrigerator/pra-18mow.webp'],
-    rating: { rate: 4.7, count: 115 },
-    isActive: true,
-  },
-  {
+    {
+        name: 'Kulkas 1 Pintu Polytron 150 Liter PRA-15CRX',
+        slug: 'pra-15crx',
+        brand: 'polytron',
+        price: 2250000,
+        description: 'Kulkas 1 Pintu Polytron 150 Liter',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/pra-15crx.webp'],
+        rating: { rate: 4.8, count: 115 },
+        isActive: true,
+    },
+    {
+        name: 'Kulkas 1 Pintu Polytron 180 Liter PRA-18MOW/B',
+        slug: 'pra-18mow',
+        brand: 'polytron',
+        price: 2800000,
+        description: 'Kulkas 1 Pintu Polytron 180 Liter',
+        category: 'refrigerator',
+        images: ['assets/images/products/refrigerator/pra-18mow.webp'],
+        rating: { rate: 4.7, count: 115 },
+        isActive: true,
+    },
+    {
     name: 'Kulkas 1 Pintu Sharp Refrigerator 166 LLiter SJ-X187MG-DB/DP',
     slug: 'sj-x187mg-db-dp',
-    brand: 'Sharp',
+    brand: 'sharp',
     price: 2500000,
     description: 'Kulkas 1 Pintu Sharp Refrigerator 166 LLiter',
     category: 'refrigerator',
     images: ['assets/images/products/refrigerator/sj-x187mg-db.webp'],
     rating: { rate: 4.9, count: 124 },
+    isActive: true,
+  },
+
+  // ================= SEWING MACHINE =================
+    {
+        name: 'Mesin Jahit JUKI Japan Import (Second)',
+        slug: 'mesin-jahit-juki-japan-import',
+        brand: 'juki',
+        price: 2950000,
+        description: 'Mesin Jahit JUKI Japan Import (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
+        category: 'sewing_machine',
+        images: ['assets/images/products/sewing_machine/mesin-jahit-juki-japan-import.jpg'],
+        rating: { rate: 4.6, count: 89 },
+        isActive: true,
+    },
+    {
+        name: 'Mesin Jahit JUKI Taiwan (Second)',
+        slug: 'mesin-jahit-juki-taiwan',
+        brand: 'juki',
+        price: 2750000,
+        description: 'Mesin Jahit JUKI Taiwan (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
+        category: 'sewing_machine',
+        images: ['assets/images/products/sewing_machine/mesin-jahit-juki-taiwan.jpg'],
+        rating: { rate: 4.5, count: 76 },
+        isActive: true,
+    },
+    {
+        name: 'Mesin Jahit JUKI Daerek (Second)',
+        slug: 'mesin-jahit-juki-daerek',
+        brand: 'juki',
+        price: 3100000,
+        description: 'Mesin Jahit JUKI Daerek (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
+        category: 'sewing_machine',
+        images: ['assets/images/products/sewing_machine/mesin-jahit-juki-daerek.jpg'],
+        rating: { rate: 4.7, count: 102 },
+        isActive: true,
+    },
+    {
+        name: 'Mesin Jahit Typical GC6150 (Second)',
+        slug: 'mesin-jahit-typical-gc6150',
+        brand: 'typical',
+        price: 2650000,
+        description: 'Mesin Jahit Typical GC6150 (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
+        category: 'sewing_machine',
+        images: ['assets/images/products/sewing_machine/mesin-jahit-typical-gc6150.jpg'],
+        rating: { rate: 4.4, count: 65 },
+        isActive: true,
+    },
+    {
+    name: 'Mesin Obras SIRUBA Import (Second)',
+    slug: 'mesin-obras-siruba-import',
+    brand: 'siruba',
+    price: 3500000,
+    description: 'Mesin Obras SIRUBA Import (Second) kondisi 90%. Termasuk Meja set baru & Dynamo Servo Baru.',
+    category: 'sewing_machine',
+    images: ['assets/images/products/sewing_machine/mesin-obras-siruba-import.jpg'],
+    rating: { rate: 4.8, count: 115 },
     isActive: true,
   }
 
@@ -941,15 +974,35 @@ const categories = [
 
 async function seed() {
   const now = new Date().toISOString();
+  const seenIds = {};
+  const seenSlugs = {};
+  const duplicates = [];
 
   if (isDryRun) {
     console.log('🔍 DRY RUN — tidak ada data yang ditulis ke Firestore\n');
   }
 
-  console.log('Seeding categories...');
+  console.log('Seeding brands...');
+  const brandMap = {};
+  for (const brand of brands) {
+    brandMap[brand.slug] = brand.name;
+    if (isDryRun) {
+      console.log('  📄 ' + brand.name + ' (' + brand.slug + ')');
+      continue;
+    }
+    await db.collection('brands').doc(brand.id).set({
+      name: brand.name,
+      slug: brand.slug,
+      createdAt: now,
+      updatedAt: now,
+    });
+    console.log('  ✓ ' + brand.name + ' (' + brand.slug + ')');
+  }
+
+  console.log('\nSeeding categories...');
   for (const cat of categories) {
     if (isDryRun) {
-      console.log(`  📄 ${cat.name} (${cat.slug})`);
+      console.log('  📄 ' + cat.name + ' (' + cat.slug + ')');
       continue;
     }
     await db.collection('categories').doc(cat.slug).set({
@@ -959,29 +1012,62 @@ async function seed() {
       createdAt: now,
       updatedAt: now,
     });
-    console.log(`  ✓ ${cat.name} (${cat.slug})`);
+    console.log('  ✓ ' + cat.name + ' (' + cat.slug + ')');
   }
 
-  console.log('\nSeeding products...');
+  // Check for duplicate slugs in seed data
+  console.log('\nChecking for duplicates...');
   for (const product of products) {
-    const resolvedImages = product.images.map((img) => {
+    if (seenSlugs[product.slug]) {
+      duplicates.push({ type: 'slug', value: product.slug, name: product.name });
+    }
+    seenSlugs[product.slug] = true;
+
+    const productId = generateProductId(product.brand, product.category, product.name);
+    if (seenIds[productId]) {
+      duplicates.push({ type: 'id', value: productId, name: product.name });
+    }
+    seenIds[productId] = true;
+  }
+
+  if (duplicates.length > 0) {
+    console.log('\n⚠️  DUPLICATES FOUND (not fixed — reported only):');
+    for (const dup of duplicates) {
+      console.log('   [' + dup.type + '] ' + dup.value + ' — ' + dup.name);
+    }
+    console.log('');
+  }
+
+  console.log('Seeding products...');
+  for (const product of products) {
+    const resolvedImages = product.images.map(function (img) {
       const stem = path.basename(img, path.extname(img));
       return resolveImage(product.category, stem);
     });
 
+    const productId = generateProductId(product.brand, product.category, product.name);
+
     if (isDryRun) {
-      console.log(`  📄 ${product.name} (${product.slug})`);
-      console.log(`     images: ${resolvedImages.join(', ')}`);
+      console.log('  📄 ' + product.name + ' (' + product.slug + ')');
+      console.log('     id: ' + productId);
+      console.log('     images: ' + resolvedImages.join(', '));
       continue;
     }
 
-    await db.collection('products').doc(product.slug).set({
-      ...product,
+    await db.collection('products').doc(productId).set({
+      name: product.name,
+      slug: product.slug,
+      brand: product.brand,
+      price: product.price,
+      description: product.description,
+      category: product.category,
       images: resolvedImages,
+      rating: product.rating,
+      isActive: product.isActive,
       createdAt: now,
       updatedAt: now,
     });
-    console.log(`  ✓ ${product.name} (${product.slug}) => ${resolvedImages[0]}`);
+    console.log('  ✓ ' + product.name + ' (' + productId + ') => ' + resolvedImages[0]);
   }
 
   if (isDryRun) {

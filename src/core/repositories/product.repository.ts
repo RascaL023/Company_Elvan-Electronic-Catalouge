@@ -1,7 +1,7 @@
 import { Product } from '../types/product';
 import { SortOption } from '../types/common';
 
-export type ProductPayload = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+export type ProductPayload = Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
 
 export interface ProductListOptions {
   category?: string;

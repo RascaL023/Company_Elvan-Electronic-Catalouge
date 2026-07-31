@@ -2,16 +2,12 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ProductPayload } from '../../core/repositories/product.repository';
 import { Category } from '../../core/types/category';
+import { Brand } from '../../core/types/brand';
 import { useRepository } from '../../hooks/useRepository';
-
-function toSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
+import { generateProductId, toSlug } from '../../utils/hash';
 
 interface FormData {
+  productId: string;
   name: string;
   slug: string;
   price: string;
@@ -25,6 +21,7 @@ interface FormData {
 }
 
 const emptyForm: FormData = {
+  productId: '',
   name: '',
   slug: '',
   price: '',
@@ -41,23 +38,27 @@ export function ProductForm() {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { productRepository, categoryRepository } = useRepository();
+  const { productRepository, categoryRepository, brandRepository } = useRepository();
 
   const [form, setForm] = useState<FormData>(emptyForm);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState<string | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [idManuallyEdited, setIdManuallyEdited] = useState(false);
 
   useEffect(() => {
     categoryRepository.getAll().then(setCategories).catch(() => {});
+    brandRepository.getAll().then(setBrands).catch(() => {});
     if (isEdit && id) {
       productRepository
         .getById(id)
         .then((product) => {
           if (product) {
             setForm({
+              productId: id,
               name: product.name,
               slug: product.slug,
               price: String(product.price),
@@ -70,6 +71,7 @@ export function ProductForm() {
               ratingRate: String(product.rating.rate),
               ratingCount: String(product.rating.count),
             });
+            setIdManuallyEdited(true);
           } else {
             setError('Product not found');
           }
@@ -79,7 +81,7 @@ export function ProductForm() {
         )
         .finally(() => setLoading(false));
     }
-  }, [id, isEdit, productRepository, categoryRepository]);
+  }, [id, isEdit, productRepository, categoryRepository, brandRepository]);
 
   const handleField = (
     field: keyof FormData,
@@ -89,6 +91,14 @@ export function ProductForm() {
       const next = { ...prev, [field]: value };
       if (field === 'name' && !slugManuallyEdited) {
         next.slug = toSlug(String(value));
+      }
+      if (!idManuallyEdited && !isEdit) {
+        const brand = field === 'brand' ? String(value) : prev.brand;
+        const category = field === 'category' ? String(value) : prev.category;
+        const name = field === 'name' ? String(value) : prev.name;
+        if (brand && category && name) {
+          next.productId = generateProductId(brand, category, name);
+        }
       }
       return next;
     });
@@ -130,6 +140,7 @@ export function ProductForm() {
     }
 
     const payload: ProductPayload = {
+      id: form.productId.trim() || undefined,
       name: form.name.trim(),
       slug: form.slug || toSlug(form.name),
       price,
@@ -206,6 +217,24 @@ export function ProductForm() {
             </div>
 
             <div>
+              <Label htmlFor="productId">Product ID</Label>
+              <input
+                id="productId"
+                type="text"
+                value={form.productId}
+                onChange={(e) => {
+                  setIdManuallyEdited(true);
+                  handleField('productId', e.target.value);
+                }}
+                placeholder={!idManuallyEdited && form.brand && form.category && form.name ? generateProductId(form.brand, form.category, form.name) : 'Auto-generated'}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+              <p className="mt-1 text-xs text-ink-muted">
+                Leave empty to auto-generate from brand, category, and name.
+              </p>
+            </div>
+
+            <div>
               <Label htmlFor="slug">Slug</Label>
               <input
                 id="slug"
@@ -253,13 +282,20 @@ export function ProductForm() {
 
             <div>
               <Label htmlFor="brand">Brand</Label>
-              <input
+              <select
                 id="brand"
-                type="text"
+                required
                 value={form.brand}
                 onChange={(e) => handleField('brand', e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              />
+              >
+                <option value="">Select brand</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.slug}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

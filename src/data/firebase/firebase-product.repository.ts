@@ -1,17 +1,17 @@
 import {
   collection,
-  doc,
   getDocs,
+  doc,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
-  query,
-  where,
   orderBy,
+  where,
   limit as firestoreLimit,
   startAfter,
-  QueryConstraint,
+  query,
 } from 'firebase/firestore';
 import { getDb } from '../../config/firebase';
 import {
@@ -50,7 +50,7 @@ export class FirebaseProductRepository implements ProductRepository {
     }
 
     const db = getDb();
-    const constraints: QueryConstraint[] = [];
+    const constraints: import('firebase/firestore').QueryConstraint[] = [];
     constraints.push(where('isActive', '==', true));
 
     if (category) {
@@ -149,11 +149,19 @@ export class FirebaseProductRepository implements ProductRepository {
   async create(payload: ProductPayload): Promise<Product> {
     const db = getDb();
     const now = new Date().toISOString();
-    const ref = await addDoc(collection(db, COLLECTION), {
+    const data = {
       ...payload,
+      id: undefined,
       createdAt: now,
       updatedAt: now,
-    });
+    };
+    if (payload.id) {
+      const ref = doc(db, COLLECTION, payload.id);
+      await setDoc(ref, data);
+      const snapshot = await getDoc(ref);
+      return docToProduct(snapshot);
+    }
+    const ref = await addDoc(collection(db, COLLECTION), data);
     const snapshot = await getDoc(ref);
     return docToProduct(snapshot);
   }
