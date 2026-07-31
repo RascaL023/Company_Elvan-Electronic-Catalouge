@@ -5,6 +5,11 @@ export default defineWorkersConfig({
 		poolOptions: {
 			workers: {
 				wrangler: { configPath: "./wrangler.jsonc" },
+				miniflare: {
+					bindings: {
+						IMAGEKIT_PRIVATE_KEY: "test-private-key",
+					},
+				},
 			},
 		},
 	},

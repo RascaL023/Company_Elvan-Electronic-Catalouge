@@ -4,6 +4,7 @@ import { Product } from '../../core/types/product';
 import { useRepository } from '../../hooks/useRepository';
 import { getCategoryName } from '../../utils/categories';
 import { formatPrice } from '../../utils/formatters';
+import { ImageService } from '../../services/imageService';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 const PAGE_SIZE = 10;
@@ -167,7 +168,7 @@ export function AdminDashboard() {
                       <div className="w-10 h-10 bg-surface-hover rounded-lg overflow-hidden shrink-0">
                         {product.images[0] && (
                           <img
-                            src={`/${product.images[0]}`}
+                            src={ImageService.getThumbnailUrl(product.images[0])}
                             alt=""
                             className="w-full h-full object-cover"
                           />

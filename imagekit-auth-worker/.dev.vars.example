@@ -1,0 +1,6 @@
+# Local development secrets for `wrangler dev`.
+# Copy this file to `.dev.vars` and fill in your ImageKit PRIVATE key.
+# Never commit `.dev.vars` (gitignored via .dev.vars*).
+# The private key is already stored as a Cloudflare secret for production:
+#   npx wrangler secret put IMAGEKIT_PRIVATE_KEY
+IMAGEKIT_PRIVATE_KEY=""

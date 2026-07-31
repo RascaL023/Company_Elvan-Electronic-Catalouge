@@ -5,6 +5,8 @@ import { Category } from '../../core/types/category';
 import { Brand } from '../../core/types/brand';
 import { useRepository } from '../../hooks/useRepository';
 import { generateProductId, toSlug } from '../../utils/hash';
+import { ImageKitService, MAX_IMAGE_SIZE_MB } from '../../services/imagekit';
+import ImageService from '../../services/imageService';
 
 interface FormData {
   productId: string;
@@ -48,6 +50,8 @@ export function ProductForm() {
   const [error, setError] = useState<string | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [idManuallyEdited, setIdManuallyEdited] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<{ index: number; message: string } | null>(null);
 
   useEffect(() => {
     categoryRepository.getAll().then(setCategories).catch(() => {});
@@ -104,12 +108,6 @@ export function ProductForm() {
     });
   };
 
-  const handleImageChange = (index: number, value: string) => {
-    const updated = [...form.images];
-    updated[index] = value;
-    handleField('images', updated);
-  };
-
   const addImageField = () => {
     handleField('images', [...form.images, '']);
   };
@@ -125,6 +123,43 @@ export function ProductForm() {
     const updated = [...form.images];
     [updated[index], updated[target]] = [updated[target], updated[index]];
     handleField('images', updated);
+  };
+
+  const handleImageUpload = (
+    index: number,
+    file: File,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      setUploadError({
+        index,
+        message: `Image exceeds the ${MAX_IMAGE_SIZE_MB}MB limit`,
+      });
+      event.target.value = '';
+      return;
+    }
+    setUploadingIndex(index);
+    setUploadError(null);
+    ImageKitService.uploadProductImage({
+      file,
+      category: form.category,
+      slug: form.slug || toSlug(form.name),
+    })
+      .then((url) => {
+        const updated = [...form.images];
+        updated[index] = url;
+        handleField('images', updated);
+      })
+      .catch((err) =>
+        setUploadError({
+          index,
+          message: err instanceof Error ? err.message : 'Upload failed',
+        })
+      )
+      .finally(() => {
+        setUploadingIndex(null);
+        event.target.value = '';
+      });
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -317,55 +352,96 @@ export function ProductForm() {
             <button
               type="button"
               onClick={addImageField}
-              className="text-sm font-medium text-primary hover:text-primary-dark"
+              disabled={uploadingIndex !== null}
+              className="text-sm font-medium text-primary hover:text-primary-dark disabled:opacity-50"
             >
               + Add Image
             </button>
           </div>
           <p className="text-xs text-ink-muted">
-            First image is the primary. Drag via buttons to reorder.
+            Upload via ImageKit (max {MAX_IMAGE_SIZE_MB}MB each). First image is
+            the primary. Drag via buttons to reorder.
           </p>
 
           {form.images.map((key, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <span className="text-xs font-mono text-ink-muted w-6 text-right shrink-0">
+            <div key={index} className="flex items-start gap-3">
+              <span className="text-xs font-mono text-ink-muted w-6 text-right shrink-0 pt-1">
                 {index === 0 ? '\u2605' : index}
               </span>
-              <input
-                type="text"
-                value={key}
-                placeholder="e.g. assets/images/products/refrigerator/image.jpg"
-                onChange={(e) => handleImageChange(index, e.target.value)}
-                className="flex-1 px-3 py-2 border border-border rounded-lg text-sm font-mono bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={() => moveImage(index, 'up')}
-                disabled={index === 0}
-                className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
-                title="Move up"
-              >
-                {'\u2191'}
-              </button>
-              <button
-                type="button"
-                onClick={() => moveImage(index, 'down')}
-                disabled={index === form.images.length - 1}
-                className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
-                title="Move down"
-              >
-                {'\u2193'}
-              </button>
-              {form.images.length > 1 && (
+              <div className="w-16 h-16 rounded-lg border border-border bg-surface-hover overflow-hidden shrink-0 flex items-center justify-center">
+                {key ? (
+                  <img
+                    src={ImageService.getThumbnailUrl(key)}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-ink-muted text-lg">+</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(index, file, e);
+                  }}
+                  disabled={uploadingIndex !== null}
+                  className="block w-full text-xs text-ink-muted file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-surface-hover file:text-sm file:font-medium file:text-ink-secondary file:cursor-pointer hover:file:bg-border disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                {key ? (
+                  <p
+                    className="mt-1 text-xs font-mono text-ink-muted truncate"
+                    title={key}
+                  >
+                    {key}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-ink-muted">
+                    Choose a file to upload
+                  </p>
+                )}
+                {uploadingIndex === index && (
+                  <p className="mt-1 text-xs text-primary">Uploading...</p>
+                )}
+                {uploadError?.index === index && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {uploadError.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-1 pt-1 shrink-0">
                 <button
                   type="button"
-                  onClick={() => removeImageField(index)}
-                  className="p-2 text-red-400 hover:text-red-600"
-                  title="Remove"
+                  onClick={() => moveImage(index, 'up')}
+                  disabled={index === 0 || uploadingIndex !== null}
+                  className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
+                  title="Move up"
                 >
-                  {'\u00d7'}
+                  {'\u2191'}
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={() => moveImage(index, 'down')}
+                  disabled={index === form.images.length - 1 || uploadingIndex !== null}
+                  className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
+                  title="Move down"
+                >
+                  {'\u2193'}
+                </button>
+                {form.images.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeImageField(index)}
+                    disabled={uploadingIndex !== null}
+                    className="p-2 text-red-400 hover:text-red-600 disabled:opacity-30"
+                    title="Remove"
+                  >
+                    {'\u00d7'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

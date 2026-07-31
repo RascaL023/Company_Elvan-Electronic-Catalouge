@@ -149,14 +149,14 @@ export class FirebaseProductRepository implements ProductRepository {
   async create(payload: ProductPayload): Promise<Product> {
     const db = getDb();
     const now = new Date().toISOString();
+    const { id, ...rest } = payload;
     const data = {
-      ...payload,
-      id: undefined,
+      ...rest,
       createdAt: now,
       updatedAt: now,
     };
-    if (payload.id) {
-      const ref = doc(db, COLLECTION, payload.id);
+    if (id) {
+      const ref = doc(db, COLLECTION, id);
       await setDoc(ref, data);
       const snapshot = await getDoc(ref);
       return docToProduct(snapshot);
@@ -169,8 +169,9 @@ export class FirebaseProductRepository implements ProductRepository {
   async update(id: string, payload: Partial<ProductPayload>): Promise<Product> {
     const db = getDb();
     const ref = doc(db, COLLECTION, id);
+    const { id: _id, ...rest } = payload;
     const data = {
-      ...payload,
+      ...rest,
       updatedAt: new Date().toISOString(),
     };
     await updateDoc(ref, data);
