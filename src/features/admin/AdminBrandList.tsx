@@ -3,11 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Brand } from '../../core/types/brand';
 import { useRepository } from '../../hooks/useRepository';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
+import { useToast } from '../../contexts/ToastContext';
 
 const PAGE_SIZE = 10;
 
 export function AdminBrandList() {
   const { brandRepository } = useRepository();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -59,8 +61,9 @@ export function AdminBrandList() {
       await brandRepository.delete(deleteTarget.id);
       setBrands((prev) => prev.filter((b) => b.id !== deleteTarget.id));
       setDeleteTarget(null);
+      toast.success('Brand berhasil dihapus');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete brand');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete brand');
     } finally {
       setDeleting(false);
     }

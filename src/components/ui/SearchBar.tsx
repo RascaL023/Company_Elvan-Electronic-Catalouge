@@ -63,7 +63,7 @@ export function SearchBar({ initialValue = '', onSearch, loading }: SearchBarPro
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-10 h-10 flex items-center justify-center shrink-0 bg-primary text-primary-text rounded-full hover:bg-primary-dark transition-colors shadow-sm mr-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-10 h-10 flex items-center justify-center shrink-0 bg-primary text-primary-text rounded-full hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all shadow-sm mr-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
           aria-label="Search"
         >
           {loading ? (

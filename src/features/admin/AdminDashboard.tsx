@@ -6,11 +6,13 @@ import { getCategoryName } from '../../utils/categories';
 import { formatPrice } from '../../utils/formatters';
 import { ImageService } from '../../services/imageService';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
+import { useToast } from '../../contexts/ToastContext';
 
 const PAGE_SIZE = 10;
 
 export function AdminDashboard() {
   const { productRepository } = useRepository();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const [products, setProducts] = useState<Product[]>([]);
@@ -65,8 +67,9 @@ export function AdminDashboard() {
       await productRepository.delete(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
       setDeleteTarget(null);
+      toast.success('Produk berhasil dihapus');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete product');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete product');
     } finally {
       setDeletingId(null);
     }

@@ -7,6 +7,7 @@ import { useRepository } from '../../hooks/useRepository';
 import { generateProductId, toSlug } from '../../utils/hash';
 import { ImageKitService, MAX_IMAGE_SIZE_MB } from '../../services/imagekit';
 import ImageService from '../../services/imageService';
+import { useToast } from '../../contexts/ToastContext';
 
 interface FormData {
   productId: string;
@@ -41,6 +42,7 @@ export function ProductForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { productRepository, categoryRepository, brandRepository } = useRepository();
+  const toast = useToast();
 
   const [form, setForm] = useState<FormData>(emptyForm);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -150,12 +152,11 @@ export function ProductForm() {
         updated[index] = url;
         handleField('images', updated);
       })
-      .catch((err) =>
-        setUploadError({
-          index,
-          message: err instanceof Error ? err.message : 'Upload failed',
-        })
-      )
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : 'Upload failed';
+        setUploadError({ index, message });
+        toast.error('Upload gambar gagal: ' + message);
+      })
       .finally(() => {
         setUploadingIndex(null);
         event.target.value = '';
@@ -199,12 +200,15 @@ export function ProductForm() {
     try {
       if (isEdit && id) {
         await productRepository.update(id, payload);
+        toast.success('Produk berhasil diperbarui');
       } else {
         await productRepository.create(payload);
+        toast.success('Produk berhasil dibuat');
       }
       navigate('/admin');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save product');
+      toast.error(err instanceof Error ? err.message : 'Gagal menyimpan produk');
     } finally {
       setSaving(false);
     }

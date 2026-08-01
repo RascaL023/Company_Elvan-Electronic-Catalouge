@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { SearchBar } from '../ui/SearchBar';
 import { storageConfig } from '../../config/storage';
@@ -8,6 +8,14 @@ export function Header() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isDark, toggle } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const search = searchParams.get('search') || '';
 
@@ -31,15 +39,26 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-surface border-b border-border">
+    <header className={`sticky top-0 z-40 bg-surface border-b border-border transition-shadow duration-300 animate-slide-down ${scrolled ? 'shadow-md' : ''}`}>
       <div className="mx-auto px-6 sm:px-10 lg:px-16">
         <div className="flex items-center justify-between h-20 gap-4 md:gap-6">
           <Link to="/" className="shrink-0" onClick={() => setIsMenuOpen(false)}>
-            <div className="text-2xl font-bold text-primary tracking-tight">
-              {storageConfig.storeName}
-            </div>
-            <div className="text-sm text-ink-secondary -mt-0.5">
-              {storageConfig.companyName}
+            <div className="flex items-center gap-3">
+              {storageConfig.companyLogoUrl && (
+                <img
+                  src={storageConfig.companyLogoUrl}
+                  alt={storageConfig.companyName}
+                  className="w-11 h-11 object-contain"
+                />
+              )}
+              <div>
+                <div className="text-2xl font-bold text-primary tracking-tight">
+                  {storageConfig.storeName}
+                </div>
+                <div className="text-sm text-ink-secondary -mt-0.5">
+                  {storageConfig.companyName}
+                </div>
+              </div>
             </div>
           </Link>
 

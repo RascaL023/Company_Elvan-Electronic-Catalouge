@@ -1,10 +1,12 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useToast } from '../../contexts/ToastContext';
 
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,18 +18,20 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
+      toast.success('Login berhasil, selamat datang!');
       navigate('/admin');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Login failed';
+      let friendly = message;
       if (message.includes('auth/invalid-credential')) {
-        setError('Email atau password salah');
+        friendly = 'Email atau password salah';
       } else if (message.includes('auth/user-not-found')) {
-        setError('Akun tidak ditemukan');
+        friendly = 'Akun tidak ditemukan';
       } else if (message.includes('auth/wrong-password')) {
-        setError('Password salah');
-      } else {
-        setError(message);
+        friendly = 'Password salah';
       }
+      setError(friendly);
+      toast.error(friendly);
     } finally {
       setLoading(false);
     }

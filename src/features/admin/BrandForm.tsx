@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRepository } from '../../hooks/useRepository';
+import { useToast } from '../../contexts/ToastContext';
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -11,6 +12,7 @@ export function BrandForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { brandRepository } = useRepository();
+  const toast = useToast();
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -57,15 +59,18 @@ export function BrandForm() {
           name: name.trim(),
           slug: slug.trim(),
         });
+        toast.success('Brand berhasil diperbarui');
       } else {
         await brandRepository.create({
           name: name.trim(),
           slug: slug.trim(),
         });
+        toast.success('Brand berhasil dibuat');
       }
       navigate('/admin/brands');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save brand');
+      toast.error(err instanceof Error ? err.message : 'Gagal menyimpan brand');
     } finally {
       setSaving(false);
     }

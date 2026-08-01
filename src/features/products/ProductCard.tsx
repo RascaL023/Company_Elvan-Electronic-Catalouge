@@ -14,7 +14,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
   const thumbnailUrl = ImageService.getPrimaryThumbnailUrl(product.images);
 
   return (
-    <div className="bg-surface rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col group border border-border">
+    <div className="bg-surface rounded-xl shadow-sm hover:-translate-y-1.5 hover:shadow-xl hover:border-primary/40 border-border transition-all duration-300 overflow-hidden flex flex-col group border">
       <Link
         to={`/product/${product.id}`}
         className="relative aspect-square bg-surface-alt p-6 sm:p-8 flex items-center justify-center overflow-hidden"
@@ -22,7 +22,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         <img
           src={thumbnailUrl}
           alt={product.name}
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 text-xs text-ink-muted text-center"
+          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 ease-out text-xs text-ink-muted text-center"
           loading="lazy"
         />
         {/* Desktop Hover Overlay Minimalist */}

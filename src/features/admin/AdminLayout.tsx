@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { AdminHeader } from './AdminHeader';
 
 export function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
 
   useEffect(() => {
@@ -27,7 +28,9 @@ export function AdminLayout() {
     <div className="min-h-screen flex flex-col bg-surface-alt">
       <AdminHeader />
       <main className="flex-1">
-        <Outlet />
+        <div key={location.pathname} className="animate-fade-in">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

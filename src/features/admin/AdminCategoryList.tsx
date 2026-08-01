@@ -3,11 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Category } from '../../core/types/category';
 import { useRepository } from '../../hooks/useRepository';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
+import { useToast } from '../../contexts/ToastContext';
 
 const PAGE_SIZE = 10;
 
 export function AdminCategoryList() {
   const { categoryRepository } = useRepository();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const [categories, setCategories] = useState<Category[]>([]);
@@ -59,8 +61,9 @@ export function AdminCategoryList() {
       await categoryRepository.delete(deleteTarget.id);
       setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       setDeleteTarget(null);
+      toast.success('Kategori berhasil dihapus');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete category');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete category');
     } finally {
       setDeleting(false);
     }

@@ -34,6 +34,7 @@ export interface StorageConfig {
   cloudinaryUploadPreset?: string;
   // ImageKit specific
   imagekitUrlEndpoint?: string;
+  companyLogoUrl?: string;
 }
 
 function getEnvVar(key: string, defaultValue = ''): string {
@@ -55,6 +56,7 @@ export const storageConfig: StorageConfig = {
   cloudinaryCloudName: getEnvVar('VITE_CLOUDINARY_CLOUD_NAME'),
   cloudinaryUploadPreset: getEnvVar('VITE_CLOUDINARY_UPLOAD_PRESET'),
   imagekitUrlEndpoint: getEnvVar('VITE_IMAGEKIT_URL_ENDPOINT'),
+  companyLogoUrl: getEnvVar('VITE_COMPANY_LOGO_IMAGE_URL', '/assets/images/company_logo.png'),
 };
 
 export const isLocalStorage = storageConfig.provider === 'local';

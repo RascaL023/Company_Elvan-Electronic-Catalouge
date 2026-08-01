@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRepository } from '../../hooks/useRepository';
+import { useToast } from '../../contexts/ToastContext';
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -11,6 +12,7 @@ export function CategoryForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { categoryRepository } = useRepository();
+  const toast = useToast();
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -60,16 +62,19 @@ export function CategoryForm() {
           slug: slug.trim(),
           description: description.trim(),
         });
+        toast.success('Kategori berhasil diperbarui');
       } else {
         await categoryRepository.create({
           name: name.trim(),
           slug: slug.trim(),
           description: description.trim(),
         });
+        toast.success('Kategori berhasil dibuat');
       }
       navigate('/admin/categories');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save category');
+      toast.error(err instanceof Error ? err.message : 'Gagal menyimpan kategori');
     } finally {
       setSaving(false);
     }
