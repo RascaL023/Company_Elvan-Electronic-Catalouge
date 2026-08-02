@@ -74,9 +74,10 @@ function getFileExtension(file: File): string {
  * Upload a product image to ImageKit.
  * Folder mirrors the existing seed pattern: assets/images/products/{category}/
  * File name mirrors the slug pattern: {slug}.{ext}
- * Returns the relative key to store in the database (no leading slash).
+ * Returns both the relative key to store in the DB (no leading slash) and the
+ * ImageKit fileId (needed to delete the file later).
  */
-export async function uploadProductImage({ file, category, slug }: UploadProductImageOptions): Promise<string> {
+export async function uploadProductImage({ file, category, slug }: UploadProductImageOptions): Promise<{ key: string; fileId: string }> {
   const baseName = slug || toSlug(file.name.replace(/\.[^.]+$/, '')) || 'image';
   const folder = `assets/images/products/${toSlug(category) || 'misc'}`;
   const { token, expire, signature } = await getSignature();
@@ -91,11 +92,37 @@ export async function uploadProductImage({ file, category, slug }: UploadProduct
     token,
     expire,
   });
-  return response.filePath.replace(/^\//, '');
+  return {
+    key: response.filePath.replace(/^\//, ''),
+    fileId: response.fileId,
+  };
+}
+
+/**
+ * Delete product images from ImageKit.
+ * Delegates the actual deletion to the auth backend (e.g. Cloudflare Worker)
+ * which holds the private key. Returns { deleted } count.
+ */
+export async function deleteProductImages(fileIds: string[]): Promise<{ deleted: number }> {
+  if (!imagekitConfig.authEndpoint) {
+    throw new Error('VITE_IMAGEKIT_AUTH_ENDPOINT is not configured');
+  }
+  const base = new URL(imagekitConfig.authEndpoint).origin;
+  const response = await fetch(`${base}/files`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileIds }),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Delete failed with status ${response.status}: ${text}`);
+  }
+  return (await response.json()) as { deleted: number };
 }
 
 export const ImageKitService = {
   uploadProductImage,
+  deleteProductImages,
   maxImageSizeMB: MAX_IMAGE_SIZE_MB,
 };
 

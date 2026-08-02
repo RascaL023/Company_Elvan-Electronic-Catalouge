@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ProductPayload } from '../../core/repositories/product.repository';
 import { Category } from '../../core/types/category';
@@ -18,6 +18,7 @@ interface FormData {
   category: string;
   brand: string;
   images: string[];
+  imageFileIds: string[];
   isActive: boolean;
   ratingRate: string;
   ratingCount: string;
@@ -32,6 +33,7 @@ const emptyForm: FormData = {
   category: '',
   brand: '',
   images: [''],
+  imageFileIds: [],
   isActive: true,
   ratingRate: '0',
   ratingCount: '0',
@@ -54,6 +56,7 @@ export function ProductForm() {
   const [idManuallyEdited, setIdManuallyEdited] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<{ index: number; message: string } | null>(null);
+  const originalImagesRef = useRef<{ key: string; fileId: string }[]>([]);
 
   useEffect(() => {
     categoryRepository.getAll().then(setCategories).catch(() => {});
@@ -73,10 +76,17 @@ export function ProductForm() {
               brand: product.brand || '',
               images:
                 product.images.length > 0 ? [...product.images] : [''],
+              imageFileIds: product.imageFileIds
+                ? [...product.imageFileIds]
+                : [],
               isActive: product.isActive,
               ratingRate: String(product.rating.rate),
               ratingCount: String(product.rating.count),
             });
+            originalImagesRef.current = product.images.map((key, i) => ({
+              key,
+              fileId: product.imageFileIds?.[i] ?? '',
+            }));
             setIdManuallyEdited(true);
           } else {
             setError('Product not found');
@@ -112,11 +122,16 @@ export function ProductForm() {
 
   const addImageField = () => {
     handleField('images', [...form.images, '']);
+    setForm((prev) => ({ ...prev, imageFileIds: [...prev.imageFileIds, ''] }));
   };
 
   const removeImageField = (index: number) => {
     const updated = form.images.filter((_, i) => i !== index);
-    handleField('images', updated.length === 0 ? [''] : updated);
+    setForm((prev) => ({
+      ...prev,
+      images: updated.length === 0 ? [''] : updated,
+      imageFileIds: prev.imageFileIds.filter((_, i) => i !== index),
+    }));
   };
 
   const moveImage = (index: number, direction: 'up' | 'down') => {
@@ -124,7 +139,9 @@ export function ProductForm() {
     if (target < 0 || target >= form.images.length) return;
     const updated = [...form.images];
     [updated[index], updated[target]] = [updated[target], updated[index]];
-    handleField('images', updated);
+    const updatedFileIds = [...form.imageFileIds];
+    [updatedFileIds[index], updatedFileIds[target]] = [updatedFileIds[target], updatedFileIds[index]];
+    setForm((prev) => ({ ...prev, images: updated, imageFileIds: updatedFileIds }));
   };
 
   const handleImageUpload = (
@@ -147,10 +164,16 @@ export function ProductForm() {
       category: form.category,
       slug: form.slug || toSlug(form.name),
     })
-      .then((url) => {
-        const updated = [...form.images];
-        updated[index] = url;
-        handleField('images', updated);
+      .then(({ key, fileId }) => {
+        setForm((prev) => {
+          const images = [...prev.images];
+          const imageFileIds = prev.imageFileIds.length
+            ? [...prev.imageFileIds]
+            : prev.images.map(() => '');
+          images[index] = key;
+          imageFileIds[index] = fileId;
+          return { ...prev, images, imageFileIds };
+        });
       })
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Upload failed';
@@ -175,6 +198,10 @@ export function ProductForm() {
       return;
     }
 
+    const paired = form.images
+      .map((img, i) => ({ img: img.trim(), fileId: form.imageFileIds[i] ?? '' }))
+      .filter((p) => p.img !== '');
+
     const payload: ProductPayload = {
       id: form.productId.trim() || undefined,
       name: form.name.trim(),
@@ -183,7 +210,8 @@ export function ProductForm() {
       description: form.description.trim(),
       category: form.category,
       brand: form.brand.trim() || undefined,
-      images: form.images.filter((img) => img.trim() !== ''),
+      images: paired.map((p) => p.img),
+      imageFileIds: paired.map((p) => p.fileId),
       isActive: form.isActive,
       rating: {
         rate: Math.min(5, Math.max(0, Number(form.ratingRate) || 0)),
@@ -199,7 +227,23 @@ export function ProductForm() {
 
     try {
       if (isEdit && id) {
+        const newKeys = new Set(paired.map((p) => p.img));
+        const removedFileIds = originalImagesRef.current
+          .filter((orig) => orig.key && !newKeys.has(orig.key))
+          .map((orig) => orig.fileId)
+          .filter((fileId) => fileId !== '');
+
         await productRepository.update(id, payload);
+
+        if (removedFileIds.length > 0) {
+          try {
+            await ImageKitService.deleteProductImages(removedFileIds);
+          } catch (deleteErr) {
+            const message =
+              deleteErr instanceof Error ? deleteErr.message : 'Failed to delete image';
+            toast.error('Produk tersimpan, tapi sebagian gambar gagal dihapus: ' + message);
+          }
+        }
         toast.success('Produk berhasil diperbarui');
       } else {
         await productRepository.create(payload);

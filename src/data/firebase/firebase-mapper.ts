@@ -14,6 +14,7 @@ export function docToProduct(doc: DocumentSnapshot): Product {
     category: data.category ?? '',
     brand: data.brand ?? undefined,
     images: data.images ?? [],
+    imageFileIds: data.imageFileIds ?? [],
     rating: {
       rate: data.rating?.rate ?? 0,
       count: data.rating?.count ?? 0,

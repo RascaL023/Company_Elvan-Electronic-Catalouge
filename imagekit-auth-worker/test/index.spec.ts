@@ -95,3 +95,79 @@ describe("ImageKit signature worker", () => {
 		expect(response.status).toBe(200);
 	});
 });
+
+describe("ImageKit file deletion", () => {
+	it("rejects DELETE /files from a disallowed origin", async () => {
+		const request = new IncomingRequest(
+			"http://localhost:8787/files",
+			{
+				method: "DELETE",
+				headers: {
+					Origin: "https://evil.example",
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ fileIds: ["abc"] }),
+			},
+		);
+		const ctx = createExecutionContext();
+		const response = await worker.fetch(
+			request,
+			{ ...env, IMAGEKIT_PRIVATE_KEY: TEST_PRIVATE_KEY },
+			ctx,
+		);
+		await waitOnExecutionContext(ctx);
+		expect(response.status).toBe(403);
+	});
+
+	it("rejects DELETE /files with a missing private key", async () => {
+		const request = new IncomingRequest(
+			"http://localhost:8787/files",
+			{
+				method: "DELETE",
+				headers: {
+					Origin: TEST_ORIGIN,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ fileIds: ["abc"] }),
+			},
+		);
+		const ctx = createExecutionContext();
+		const response = await worker.fetch(
+			request,
+			{ ...env, IMAGEKIT_PRIVATE_KEY: undefined },
+			ctx,
+		);
+		await waitOnExecutionContext(ctx);
+		expect(response.status).toBe(500);
+	});
+
+	it("returns 400 for invalid body or empty fileIds", async () => {
+		const empty = new IncomingRequest("http://localhost:8787/files", {
+			method: "DELETE",
+			headers: { Origin: TEST_ORIGIN, "Content-Type": "application/json" },
+			body: JSON.stringify({ fileIds: [] }),
+		});
+		const bad = new IncomingRequest("http://localhost:8787/files", {
+			method: "DELETE",
+			headers: { Origin: TEST_ORIGIN, "Content-Type": "application/json" },
+			body: JSON.stringify({ fileIds: "not-an-array" }),
+		});
+		const ctx = createExecutionContext();
+
+		const respEmpty = await worker.fetch(
+			empty,
+			{ ...env, IMAGEKIT_PRIVATE_KEY: TEST_PRIVATE_KEY },
+			ctx,
+		);
+		await waitOnExecutionContext(ctx);
+		expect(respEmpty.status).toBe(400);
+
+		const respBad = await worker.fetch(
+			bad,
+			{ ...env, IMAGEKIT_PRIVATE_KEY: TEST_PRIVATE_KEY },
+			ctx,
+		);
+		await waitOnExecutionContext(ctx);
+		expect(respBad.status).toBe(400);
+	});
+});

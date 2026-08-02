@@ -7,6 +7,7 @@ export interface Product {
   category: string;
   brand?: string;
   images: string[];
+  imageFileIds?: string[];
   rating: {
     rate: number;
     count: number;
