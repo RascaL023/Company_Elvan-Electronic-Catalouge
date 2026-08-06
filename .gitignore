@@ -1,6 +1,8 @@
 .private
 .agents
 service-account.json
+service-account-new.json
+imagekit-fileid-map.json
 
 ##### FIREBASE #####
 **.cache

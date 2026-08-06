@@ -22,7 +22,7 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getDb(): Firestore {
   if (!db) {
-    db = getFirestore(getFirebaseApp());
+    db = getFirestore(getFirebaseApp(), 'default');
   }
   return db;
 }

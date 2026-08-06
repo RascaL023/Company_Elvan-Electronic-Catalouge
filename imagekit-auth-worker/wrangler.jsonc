@@ -16,7 +16,7 @@
 		"nodejs_compat"
 	],
 	"vars": {
-		"ALLOWED_ORIGINS": "http://localhost:5173,https://frb-hosting-23.web.app,https://rascal.web.id"
+		"ALLOWED_ORIGINS": "http://localhost:5173,https://elvan-electronic-catalog.web.app,https://elvanelectronic.com,https://rascal.web.id"
 	}
 	/**
 	 * Smart Placement

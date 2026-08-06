@@ -51,7 +51,9 @@ export class FirebaseProductRepository implements ProductRepository {
 
     const db = getDb();
     const constraints: import('firebase/firestore').QueryConstraint[] = [];
-    constraints.push(where('isActive', '==', true));
+    if (!options.includeInactive) {
+      constraints.push(where('isActive', '==', true));
+    }
 
     if (category) {
       constraints.push(where('category', '==', category));
@@ -92,7 +94,10 @@ export class FirebaseProductRepository implements ProductRepository {
     const { category, sort, search, cursor } = options;
     const pageSize = options.limit ?? DEFAULT_LIMIT;
 
-    let result = (await this.getAll()).filter((p) => p.isActive);
+    let result = await this.getAll();
+    if (!options.includeInactive) {
+      result = result.filter((p) => p.isActive);
+    }
 
     if (category) {
       result = result.filter((p) => p.category === category);

@@ -127,7 +127,9 @@ export class MockProductRepository implements ProductRepository {
     const { category, sort, search, cursor } = options;
     const pageSize = options.limit ?? DEFAULT_LIMIT;
 
-    let result = mockProducts.filter((p) => p.isActive);
+    let result = options.includeInactive
+      ? [...mockProducts]
+      : mockProducts.filter((p) => p.isActive);
 
     if (category) {
       result = result.filter((p) => p.category === category);

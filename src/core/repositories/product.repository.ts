@@ -9,6 +9,7 @@ export interface ProductListOptions {
   search?: string;
   limit?: number;
   cursor?: string;
+  includeInactive?: boolean;
 }
 
 export interface ProductListResult {
