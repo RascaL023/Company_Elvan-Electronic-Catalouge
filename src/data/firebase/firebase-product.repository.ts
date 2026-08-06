@@ -8,9 +8,6 @@ import {
   updateDoc,
   deleteDoc,
   orderBy,
-  where,
-  limit as firestoreLimit,
-  startAfter,
   query,
 } from 'firebase/firestore';
 import { getDb } from '../../config/firebase';
@@ -26,68 +23,31 @@ import { docToProduct } from './firebase-mapper';
 const COLLECTION = 'products';
 const DEFAULT_LIMIT = 24;
 
-const SORT_FIELDS: Record<string, [string, 'asc' | 'desc']> = {
-  'price-asc': ['price', 'asc'],
-  'price-desc': ['price', 'desc'],
-  'rating-desc': ['rating.rate', 'desc'],
-};
+// --- CACHE MECHANISM ---
+let cachedProducts: Product[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 8 * 60 * 1000; // 8 minutes
 
 export class FirebaseProductRepository implements ProductRepository {
-  async getAll(): Promise<Product[]> {
+  async getAll(forceRefresh = false): Promise<Product[]> {
+    const now = Date.now();
+    if (!forceRefresh && cachedProducts && (now - cacheTimestamp < CACHE_TTL)) {
+      return cachedProducts;
+    }
+
     const db = getDb();
     const snapshot = await getDocs(
       query(collection(db, COLLECTION), orderBy('createdAt', 'desc'))
     );
-    return snapshot.docs.map(docToProduct);
+    cachedProducts = snapshot.docs.map(docToProduct);
+    cacheTimestamp = now;
+    return cachedProducts;
   }
 
   async list(options: ProductListOptions = {}): Promise<ProductListResult> {
-    const { category, sort, search, cursor } = options;
-    const pageSize = options.limit ?? DEFAULT_LIMIT;
-
-    if (search) {
-      return this.listClientSide({ ...options, search });
-    }
-
-    const db = getDb();
-    const constraints: import('firebase/firestore').QueryConstraint[] = [];
-    if (!options.includeInactive) {
-      constraints.push(where('isActive', '==', true));
-    }
-
-    if (category) {
-      constraints.push(where('category', '==', category));
-    }
-
-    if (sort && sort !== 'default') {
-      const [field, dir] = SORT_FIELDS[sort];
-      constraints.push(orderBy(field, dir));
-    } else {
-      constraints.push(orderBy('createdAt', 'desc'));
-    }
-
-    constraints.push(firestoreLimit(pageSize));
-
-    if (cursor) {
-      const cursorRef = doc(db, COLLECTION, cursor);
-      const cursorSnap = await getDoc(cursorRef);
-      if (cursorSnap.exists()) {
-        constraints.push(startAfter(cursorSnap));
-      }
-    }
-
-    const snapshot = await getDocs(
-      query(collection(db, COLLECTION), ...constraints)
-    );
-
-    const docs = snapshot.docs;
-    const hasMore = docs.length === pageSize;
-
-    return {
-      products: docs.map(docToProduct),
-      hasMore,
-      cursor: docs.length > 0 ? docs[docs.length - 1].id : null,
-    };
+    // Karena kita memakai cache, semua list, filter, sort, dan pagination
+    // diproses sepenuhnya di client-side (gratis read dan instan 0 latency).
+    return this.listClientSide(options);
   }
 
   private async listClientSide(options: ProductListOptions): Promise<ProductListResult> {
@@ -144,6 +104,12 @@ export class FirebaseProductRepository implements ProductRepository {
   }
 
   async getById(id: string): Promise<Product | null> {
+    // Cek cache dulu, kalau ada pakai cache. (Lebih hemat baca)
+    if (cachedProducts) {
+      const found = cachedProducts.find(p => p.id === id);
+      if (found) return found;
+    }
+
     const db = getDb();
     const ref = doc(db, COLLECTION, id);
     const snapshot = await getDoc(ref);
@@ -160,15 +126,24 @@ export class FirebaseProductRepository implements ProductRepository {
       createdAt: now,
       updatedAt: now,
     };
+    
+    let product: Product;
     if (id) {
       const ref = doc(db, COLLECTION, id);
       await setDoc(ref, data);
       const snapshot = await getDoc(ref);
-      return docToProduct(snapshot);
+      product = docToProduct(snapshot);
+    } else {
+      const ref = await addDoc(collection(db, COLLECTION), data);
+      const snapshot = await getDoc(ref);
+      product = docToProduct(snapshot);
     }
-    const ref = await addDoc(collection(db, COLLECTION), data);
-    const snapshot = await getDoc(ref);
-    return docToProduct(snapshot);
+
+    // Update cache secara reaktif
+    if (cachedProducts) {
+      cachedProducts = [product, ...cachedProducts];
+    }
+    return product;
   }
 
   async update(id: string, payload: Partial<ProductPayload>): Promise<Product> {
@@ -181,11 +156,22 @@ export class FirebaseProductRepository implements ProductRepository {
     };
     await updateDoc(ref, data);
     const snapshot = await getDoc(ref);
-    return docToProduct(snapshot);
+    const product = docToProduct(snapshot);
+
+    // Update cache secara reaktif
+    if (cachedProducts) {
+      cachedProducts = cachedProducts.map(p => p.id === id ? product : p);
+    }
+    return product;
   }
 
   async delete(id: string): Promise<void> {
     const db = getDb();
     await deleteDoc(doc(db, COLLECTION, id));
+
+    // Update cache secara reaktif
+    if (cachedProducts) {
+      cachedProducts = cachedProducts.filter(p => p.id !== id);
+    }
   }
 }
