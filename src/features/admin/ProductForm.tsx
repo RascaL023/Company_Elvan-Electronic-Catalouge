@@ -219,11 +219,8 @@ export function ProductForm() {
       },
     };
 
-    if (payload.images.length === 0) {
-      setError('At least one image key is required');
-      setSaving(false);
-      return;
-    }
+    // Image requirement is now optional
+    // if (payload.images.length === 0) { ... }
 
     try {
       if (isEdit && id) {
@@ -478,7 +475,7 @@ export function ProductForm() {
                 >
                   {'\u2193'}
                 </button>
-                {form.images.length > 1 && (
+                {!(form.images.length === 1 && !form.images[0]) && (
                   <button
                     type="button"
                     onClick={() => removeImageField(index)}
