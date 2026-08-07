@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Product } from '../../core/types/product';
-import { useRepository } from '../../hooks/useRepository';
 import { useProducts } from '../../hooks/useProducts';
+import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { useCategories } from '../../hooks/useCategories';
 import { getCategoryName } from '../../utils/categories';
 import { formatPrice } from '../../utils/formatters';
@@ -13,8 +13,8 @@ import { useToast } from '../../contexts/ToastContext';
 const PAGE_SIZE = 10;
 
 export function AdminDashboard() {
-  const { productRepository } = useRepository();
   const toast = useToast();
+  const { deleteProduct } = useDeleteProduct();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const category = searchParams.get('category') || null;
@@ -49,10 +49,16 @@ export function AdminDashboard() {
     const id = deleteTarget.id;
     setDeletingId(id);
     try {
-      await productRepository.delete(id);
+      const result = await deleteProduct(deleteTarget);
       removeFromList(id);
       setDeleteTarget(null);
-      toast.success('Produk berhasil dihapus');
+      if (result.failedImages > 0) {
+        toast.error(
+          `Produk berhasil dihapus, tapi ${result.failedImages} gambar gagal dihapus`
+        );
+      } else {
+        toast.success('Produk berhasil dihapus');
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete product');
     } finally {
