@@ -1,4 +1,4 @@
-import { DocumentSnapshot, Timestamp } from 'firebase/firestore';
+import { DocumentSnapshot, Timestamp } from 'firebase/firestore/lite';
 import { Product } from '../../core/types/product';
 import { Category } from '../../core/types/category';
 

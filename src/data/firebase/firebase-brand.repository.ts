@@ -8,7 +8,7 @@ import {
   deleteDoc,
   Timestamp,
   DocumentSnapshot,
-} from 'firebase/firestore';
+} from 'firebase/firestore/lite';
 import { getDb } from '../../config/firebase';
 import { BrandRepository } from '../../core/repositories/brand.repository';
 import { Brand, BrandPayload } from '../../core/types/brand';

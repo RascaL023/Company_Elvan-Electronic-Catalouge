@@ -1,9 +1,8 @@
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { Firestore, getFirestore } from 'firebase/firestore';
+import { Firestore, getFirestore } from 'firebase/firestore/lite';
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
-let auth: Auth | null = null;
 
 export function getFirebaseApp(): FirebaseApp {
   if (!app) {
@@ -24,11 +23,4 @@ export function getDb(): Firestore {
     db = getFirestore(getFirebaseApp(), 'default');
   }
   return db;
-}
-
-export function getAuthInstance(): Auth {
-  if (!auth) {
-    auth = getAuth(getFirebaseApp());
-  }
-  return auth;
 }

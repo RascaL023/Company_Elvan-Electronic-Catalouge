@@ -9,7 +9,7 @@ import {
   deleteDoc,
   orderBy,
   query,
-} from 'firebase/firestore';
+} from 'firebase/firestore/lite';
 import { getDb } from '../../config/firebase';
 import {
   ProductRepository,

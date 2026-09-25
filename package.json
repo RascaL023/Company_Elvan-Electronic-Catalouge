@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@imagekit/react": "^5.0.2",
     "firebase": "^12.16.0",
     "imagekit-javascript": "^4.0.1",
     "react": "^18.3.1",

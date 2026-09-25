@@ -7,7 +7,8 @@ import {
   updateDoc,
   deleteDoc,
   Timestamp,
-} from 'firebase/firestore';
+  DocumentSnapshot,
+} from 'firebase/firestore/lite';
 import { getDb } from '../../config/firebase';
 import { CategoryRepository } from '../../core/repositories/category.repository';
 import { Category, CategoryPayload } from '../../core/types/category';
@@ -58,7 +59,7 @@ export class FirebaseCategoryRepository implements CategoryRepository {
     await deleteDoc(doc(db, COLLECTION, id));
   }
 
-  private docToCategory(doc: import('firebase/firestore').DocumentSnapshot): Category {
+  private docToCategory(doc: DocumentSnapshot): Category {
     const data = doc.data();
     if (!data) throw new Error(`Category document ${doc.id} has no data`);
     return {
