@@ -10,6 +10,12 @@ const ProductDetailPage = lazy(() =>
   }))
 );
 
+const AdminArea = lazy(() =>
+  import('./AdminArea').then((m) => ({
+    default: m.AdminArea,
+  }))
+);
+
 const AdminLayout = lazy(() =>
   import('../features/admin/AdminLayout').then((m) => ({
     default: m.AdminLayout,
@@ -83,91 +89,101 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/admin/login',
+    path: '/admin',
     element: (
       <Suspense fallback={<LoadingFallback />}>
-        <LoginPage />
-      </Suspense>
-    ),
-  },
-  {
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <AdminLayout />
+        <AdminArea />
       </Suspense>
     ),
     children: [
       {
-        path: '/admin',
+        path: 'login',
         element: (
           <Suspense fallback={<LoadingFallback />}>
-            <AdminDashboard />
+            <LoginPage />
           </Suspense>
         ),
       },
       {
-        path: '/admin/products/new',
         element: (
           <Suspense fallback={<LoadingFallback />}>
-            <ProductForm />
+            <AdminLayout />
           </Suspense>
         ),
-      },
-      {
-        path: '/admin/products/:id/edit',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <ProductForm />
-          </Suspense>
-        ),
-      },
-      {
-        path: '/admin/categories',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <AdminCategoryList />
-          </Suspense>
-        ),
-      },
-      {
-        path: '/admin/categories/new',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <CategoryForm />
-          </Suspense>
-        ),
-      },
-      {
-        path: '/admin/categories/:id/edit',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <CategoryForm />
-          </Suspense>
-        ),
-      },
-      {
-        path: '/admin/brands',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <AdminBrandList />
-          </Suspense>
-        ),
-      },
-      {
-        path: '/admin/brands/new',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <BrandForm />
-          </Suspense>
-        ),
-      },
-      {
-        path: '/admin/brands/:id/edit',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <BrandForm />
-          </Suspense>
-        ),
+        children: [
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminDashboard />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products/new',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <ProductForm />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'products/:id/edit',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <ProductForm />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'categories',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminCategoryList />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'categories/new',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <CategoryForm />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'categories/:id/edit',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <CategoryForm />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'brands',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminBrandList />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'brands/new',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <BrandForm />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'brands/:id/edit',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <BrandForm />
+              </Suspense>
+            ),
+          },
+        ],
       },
     ],
   },

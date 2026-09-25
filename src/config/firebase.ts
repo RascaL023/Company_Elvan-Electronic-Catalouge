@@ -1,6 +1,5 @@
 import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Firestore, getFirestore } from 'firebase/firestore';
-import { Auth, getAuth } from 'firebase/auth';
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
