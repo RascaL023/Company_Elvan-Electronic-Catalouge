@@ -1,64 +1,66 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { ProductsPage } from '../features/products/ProductsPage';
 import { NotFoundPage } from '../features/NotFoundPage';
+import { lazyWithReload } from './lazyWithReload';
+import { RouteErrorElement } from './RouteErrorElement';
 
-const ProductDetailPage = lazy(() =>
+const ProductDetailPage = lazyWithReload(() =>
   import('../features/product-detail/ProductDetailPage').then((m) => ({
     default: m.ProductDetailPage,
   }))
 );
 
-const AdminArea = lazy(() =>
+const AdminArea = lazyWithReload(() =>
   import('./AdminArea').then((m) => ({
     default: m.AdminArea,
   }))
 );
 
-const AdminLayout = lazy(() =>
+const AdminLayout = lazyWithReload(() =>
   import('../features/admin/AdminLayout').then((m) => ({
     default: m.AdminLayout,
   }))
 );
 
-const AdminDashboard = lazy(() =>
+const AdminDashboard = lazyWithReload(() =>
   import('../features/admin/AdminDashboard').then((m) => ({
     default: m.AdminDashboard,
   }))
 );
 
-const ProductForm = lazy(() =>
+const ProductForm = lazyWithReload(() =>
   import('../features/admin/ProductForm').then((m) => ({
     default: m.ProductForm,
   }))
 );
 
-const AdminCategoryList = lazy(() =>
+const AdminCategoryList = lazyWithReload(() =>
   import('../features/admin/AdminCategoryList').then((m) => ({
     default: m.AdminCategoryList,
   }))
 );
 
-const CategoryForm = lazy(() =>
+const CategoryForm = lazyWithReload(() =>
   import('../features/admin/CategoryForm').then((m) => ({
     default: m.CategoryForm,
   }))
 );
 
-const AdminBrandList = lazy(() =>
+const AdminBrandList = lazyWithReload(() =>
   import('../features/admin/AdminBrandList').then((m) => ({
     default: m.AdminBrandList,
   }))
 );
 
-const BrandForm = lazy(() =>
+const BrandForm = lazyWithReload(() =>
   import('../features/admin/BrandForm').then((m) => ({
     default: m.BrandForm,
   }))
 );
 
-const LoginPage = lazy(() =>
+const LoginPage = lazyWithReload(() =>
   import('../features/auth/LoginPage').then((m) => ({
     default: m.LoginPage,
   }))
@@ -75,6 +77,7 @@ function LoadingFallback() {
 export const router = createBrowserRouter([
   {
     element: <PageLayout />,
+    errorElement: <RouteErrorElement />,
     children: [
       { path: '/', element: <ProductsPage /> },
       {
@@ -95,6 +98,7 @@ export const router = createBrowserRouter([
         <AdminArea />
       </Suspense>
     ),
+    errorElement: <RouteErrorElement />,
     children: [
       {
         path: 'login',
