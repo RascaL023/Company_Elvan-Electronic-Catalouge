@@ -7,7 +7,9 @@
  *
  * The auth endpoint is intentionally a plain URL: it can be swapped for any
  * backend (Cloudflare Worker today, VPS later) that implements the same
- * contract: GET /signature -> { token, expire, signature }
+ * contract without touching feature code (see `ImageUploadService`):
+ * - GET {VITE_IMAGEKIT_AUTH_ENDPOINT} -> { token, expire, signature }
+ * - DELETE {origin}/files with { fileIds } -> { deleted }
  */
 
 export interface ImageKitConfig {

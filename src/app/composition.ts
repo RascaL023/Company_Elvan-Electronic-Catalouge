@@ -2,6 +2,7 @@ import { BrandRepository } from '../core/repositories/brand.repository';
 import { CategoryRepository } from '../core/repositories/category.repository';
 import { ProductRepository } from '../core/repositories/product.repository';
 import type { AuthService } from '../core/auth/auth-service';
+import type { ImageUploadService } from '../core/services/image-upload.service';
 import { MockProductRepository } from '../data/mock/mock-product.repository';
 import { MockCategoryRepository } from '../data/mock/mock-category.repository';
 import { MockBrandRepository } from '../data/mock/mock-brand.repository';
@@ -12,6 +13,7 @@ import { CachedProductRepository } from '../services/cached-product.repository';
 import { CachedCategoryRepository } from '../services/cached-category.repository';
 import { CachedBrandRepository } from '../services/cached-brand.repository';
 import { FirebaseAuthService } from '../data/firebase/firebase-auth.adapter';
+import { ImageKitUploadService } from '../services/imagekit';
 
 /**
  * Composition root: the single place that decides which infrastructure
@@ -113,3 +115,13 @@ export const repositories: RepositorySet = createRepositories();
  * (`useAuth`, admin pages) stays untouched.
  */
 export const authService: AuthService = new FirebaseAuthService();
+
+/**
+ * Active image upload backend. Feature code must use this (or a hook
+ * returning it) instead of importing `src/services/imagekit.ts` directly.
+ * Moving the signature endpoint from the Cloudflare Worker to a VPS
+ * backend is an env change (`VITE_IMAGEKIT_AUTH_ENDPOINT`); replacing
+ * ImageKit itself later means pointing this at the new adapter.
+ */
+export const imageUploadService: ImageUploadService =
+  new ImageKitUploadService();

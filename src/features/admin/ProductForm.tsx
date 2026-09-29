@@ -5,7 +5,8 @@ import { Category } from '../../core/types/category';
 import { Brand } from '../../core/types/brand';
 import { useRepository } from '../../hooks/useRepository';
 import { generateProductId, toSlug } from '../../utils/hash';
-import { ImageKitService, MAX_IMAGE_SIZE_MB } from '../../services/imagekit';
+import { imageUploadService } from '../../app/composition';
+import { MAX_IMAGE_SIZE_MB } from '../../core/services/image-upload.service';
 import ImageService from '../../services/imageService';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -159,7 +160,7 @@ export function ProductForm() {
     }
     setUploadingIndex(index);
     setUploadError(null);
-    ImageKitService.uploadProductImage({
+    imageUploadService.uploadProductImage({
       file,
       category: form.category,
       slug: form.slug || toSlug(form.name),
@@ -234,7 +235,7 @@ export function ProductForm() {
 
         if (removedFileIds.length > 0) {
           try {
-            await ImageKitService.deleteProductImages(removedFileIds);
+            await imageUploadService.deleteProductImages(removedFileIds);
           } catch (deleteErr) {
             const message =
               deleteErr instanceof Error ? deleteErr.message : 'Failed to delete image';
