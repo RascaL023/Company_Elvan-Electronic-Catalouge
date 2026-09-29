@@ -1,21 +1,22 @@
 /**
  * Storage configuration using Vite environment variables.
- * 
+ *
+ * Supported providers: `local` (default) and `imagekit` (active, see
+ * `.env.example`). `s3`, `cloudflare`, and `cloudinary` below are legacy
+ * code paths kept for backwards compatibility only — do not add new
+ * providers here (see issue #1 non-goals).
+ *
  * To use this, create a .env file in the project root with:
- * 
- * VITE_STORAGE_PROVIDER=local|s3|cloudflare|cloudinary|imagekit
+ *
+ * VITE_STORAGE_PROVIDER=local|imagekit
  * VITE_CDN_BASE_URL=https://your-cdn.com
- * VITE_S3_BUCKET=your-bucket-name
- * VITE_S3_REGION=us-east-1
- * VITE_CLOUDFLARE_ACCOUNT_ID=your-account-id
- * VITE_CLOUDFLARE_BUCKET=your-bucket-name
- * VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
  * VITE_IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_imagekit_id
- * 
+ *
  * For local development, VITE_STORAGE_PROVIDER=local is the default.
  */
 
-export type StorageProvider = 'local' | 's3' | 'cloudflare' | 'cloudinary' | 'imagekit';
+/** Supported: `local` | `imagekit`. Others are legacy (deprecated). */
+export type StorageProvider = 'local' | 'imagekit' | 's3' | 'cloudflare' | 'cloudinary';
 
 export interface StorageConfig {
   provider: StorageProvider;
@@ -23,14 +24,17 @@ export interface StorageConfig {
   placeholderImageUrl: string;
   storeName: string;
   companyName: string;
-  // S3 specific
+  /** @deprecated Legacy S3 path; do not use for new code. */
   s3Bucket?: string;
+  /** @deprecated Legacy S3 path; do not use for new code. */
   s3Region?: string;
-  // Cloudflare specific
+  /** @deprecated Legacy Cloudflare R2 path; do not use for new code. */
   cloudflareAccountId?: string;
+  /** @deprecated Legacy Cloudflare R2 path; do not use for new code. */
   cloudflareBucket?: string;
-  // Cloudinary specific
+  /** @deprecated Legacy Cloudinary path; do not use for new code. */
   cloudinaryCloudName?: string;
+  /** @deprecated Legacy Cloudinary path; do not use for new code. */
   cloudinaryUploadPreset?: string;
   // ImageKit specific
   imagekitUrlEndpoint?: string;
@@ -60,7 +64,10 @@ export const storageConfig: StorageConfig = {
 };
 
 export const isLocalStorage = storageConfig.provider === 'local';
+/** @deprecated Legacy path; only `local` and `imagekit` are supported. */
 export const isS3Storage = storageConfig.provider === 's3';
+/** @deprecated Legacy path; only `local` and `imagekit` are supported. */
 export const isCloudflareStorage = storageConfig.provider === 'cloudflare';
+/** @deprecated Legacy path; only `local` and `imagekit` are supported. */
 export const isCloudinaryStorage = storageConfig.provider === 'cloudinary';
 export const isImageKitStorage = storageConfig.provider === 'imagekit';

@@ -1,11 +1,8 @@
 import { storageConfig } from '../../config/storage';
+import { siteConfig, formatWaLink } from '../../config/site';
 
 export function Footer() {
   const year = new Date().getFullYear();
-  const formatWaLink = (num: string) => {
-    const clean = num.replace(/\D/g, '');
-    return clean.startsWith('0') ? `https://wa.me/62${clean.substring(1)}` : `https://wa.me/${clean}`;
-  };
 
   return (
     <footer className="border-t border-border bg-surface">
@@ -19,7 +16,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4">
             <a
-              href={formatWaLink(import.meta.env.VITE_SOCIAL_WA)}
+              href={formatWaLink(siteConfig.social.wa)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-ink-muted hover:text-primary hover:scale-110 transition-all"
@@ -30,7 +27,7 @@ export function Footer() {
               </svg>
             </a>
             <a
-              href={import.meta.env.VITE_SOCIAL_IG || '#'}
+              href={siteConfig.social.ig || '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="text-ink-muted hover:text-primary hover:scale-110 transition-all"
@@ -41,7 +38,7 @@ export function Footer() {
               </svg>
             </a>
             <a
-              href={import.meta.env.VITE_SOCIAL_FB || '#'}
+              href={siteConfig.social.fb || '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="text-ink-muted hover:text-primary hover:scale-110 transition-all"

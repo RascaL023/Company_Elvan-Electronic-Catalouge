@@ -3,12 +3,15 @@ import { storageConfig } from '../config/storage';
 
 /**
  * Image Service
- * 
- * Higher-level image operations for components.
+ *
+ * Higher-level image display operations for components (URL resolution
+ * only — uploads/deletes live behind `ImageUploadService`).
  * Provides a clean interface for components to work with product images.
- * 
+ *
  * This service abstracts the image URL resolution logic and provides
- * consistent methods for getting different image sizes.
+ * consistent methods for getting different image sizes. It reads the
+ * display config from `src/config/storage.ts`; components must not read
+ * `import.meta.env` directly.
  */
 
 export const ImageService = {

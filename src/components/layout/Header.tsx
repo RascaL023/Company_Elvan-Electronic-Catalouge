@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { SearchBar } from '../ui/SearchBar';
 import { storageConfig } from '../../config/storage';
+import { siteConfig, formatWaLink } from '../../config/site';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export function Header() {
@@ -19,16 +20,7 @@ export function Header() {
 
   const search = searchParams.get('search') || '';
 
-  const contacts = [
-    { name: 'Admin', number: import.meta.env.VITE_ADMIN_NUMBER },
-    { name: 'CS 1', number: import.meta.env.VITE_CS1_NUMBER },
-    { name: 'CS 2', number: import.meta.env.VITE_CS2_NUMBER },
-  ].filter(c => c.number);
-
-  const formatWaLink = (num: string) => {
-    const clean = num.replace(/\D/g, '');
-    return clean.startsWith('0') ? `https://wa.me/62${clean.substring(1)}` : `https://wa.me/${clean}`;
-  };
+  const contacts = siteConfig.contacts;
 
   const handleSearch = (value: string) => {
     setSearchParams((prev) => {
