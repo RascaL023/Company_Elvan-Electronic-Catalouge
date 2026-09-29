@@ -29,9 +29,9 @@ let cacheTimestamp = 0;
 const CACHE_TTL = 8 * 60 * 1000; // 8 minutes
 
 export class FirebaseProductRepository implements ProductRepository {
-  async getAll(forceRefresh = false): Promise<Product[]> {
+  async getAll(): Promise<Product[]> {
     const now = Date.now();
-    if (!forceRefresh && cachedProducts && (now - cacheTimestamp < CACHE_TTL)) {
+    if (cachedProducts && (now - cacheTimestamp < CACHE_TTL)) {
       return cachedProducts;
     }
 
@@ -47,6 +47,9 @@ export class FirebaseProductRepository implements ProductRepository {
   async list(options: ProductListOptions = {}): Promise<ProductListResult> {
     // Karena kita memakai cache, semua list, filter, sort, dan pagination
     // diproses sepenuhnya di client-side (gratis read dan instan 0 latency).
+    // Kontraknya tetap application-level (lihat ProductListOptions), jadi
+    // implementasi API di masa depan boleh mengerjakannya server-side
+    // tanpa mengubah pemanggil.
     return this.listClientSide(options);
   }
 

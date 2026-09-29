@@ -1,3 +1,7 @@
+/**
+ * Domain category entity (`createdAt` / `updatedAt` are ISO-8601 strings;
+ * see `Product` for the infrastructure-agnostic conventions).
+ */
 export interface Category {
   id: string;
   name: string;
