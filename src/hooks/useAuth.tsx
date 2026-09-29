@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getAuthInstance } from '../config/firebaseAuth';
+import type { AuthUser } from '../core/auth/auth-service';
+import { authService } from '../app/composition';
 
 interface AuthContextValue {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -12,11 +12,11 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getAuthInstance(), (u) => {
+    const unsubscribe = authService.onSessionChange((u) => {
       setUser(u);
       setLoading(false);
     });
@@ -24,11 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(getAuthInstance(), email, password);
+    await authService.login(email, password);
   };
 
   const logout = async () => {
-    await signOut(getAuthInstance());
+    await authService.logout();
   };
 
   return (
