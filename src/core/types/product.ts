@@ -9,7 +9,10 @@
  * - `images` are provider-independent relative keys
  *   (e.g. `assets/images/products/television/example.jpg`), resolved
  *   to full URLs by the image service.
- * - `category` / `brand` are plain slug references, not document refs.
+ * - `category` / `brand` are plain slug references, not document refs
+ *   (e.g. `category: 'television'`). A future SQL schema may store
+ *   `category_id` / `brand_id` foreign keys, but the backend mapper must
+ *   resolve them back to slugs so this domain shape stays unchanged.
  */
 export interface Product {
   id: string;
