@@ -1,6 +1,7 @@
 /**
- * ImageKit Service
+ * ImageKit implementation of the application-level image upload contract.
  *
+ * Implements `ImageUploadService` (`src/core/services/image-upload.service.ts`).
  * Handles direct browser uploads to ImageKit (no backend involvement).
  * Stored image keys are relative paths following the existing seed pattern:
  *   assets/images/products/{category}/{slug}.{ext}
@@ -16,14 +17,14 @@
 import ImageKit from 'imagekit-javascript';
 import { imagekitConfig, isImageKitConfigured } from '../config/imagekit';
 import { toSlug } from '../utils/hash';
+import type {
+  ImageUploadService,
+  UploadProductImageOptions,
+  UploadProductImageResult,
+} from '../core/services/image-upload.service';
+import { MAX_IMAGE_SIZE_MB } from '../core/services/image-upload.service';
 
-export interface UploadProductImageOptions {
-  file: File;
-  category: string;
-  slug?: string;
-}
-
-export const MAX_IMAGE_SIZE_MB = 20;
+export type { UploadProductImageOptions };
 
 interface SignatureResponse {
   token: string;
@@ -77,7 +78,7 @@ function getFileExtension(file: File): string {
  * Returns both the relative key to store in the DB (no leading slash) and the
  * ImageKit fileId (needed to delete the file later).
  */
-export async function uploadProductImage({ file, category, slug }: UploadProductImageOptions): Promise<{ key: string; fileId: string }> {
+export async function uploadProductImage({ file, category, slug }: UploadProductImageOptions): Promise<UploadProductImageResult> {
   const baseName = slug || toSlug(file.name.replace(/\.[^.]+$/, '')) || 'image';
   const folder = `assets/images/products/${toSlug(category) || 'misc'}`;
   const { token, expire, signature } = await getSignature();
@@ -120,10 +121,26 @@ export async function deleteProductImages(fileIds: string[]): Promise<{ deleted:
   return (await response.json()) as { deleted: number };
 }
 
-export const ImageKitService = {
+export const ImageKitService: ImageUploadService = {
+  maxImageSizeMB: MAX_IMAGE_SIZE_MB,
   uploadProductImage,
   deleteProductImages,
-  maxImageSizeMB: MAX_IMAGE_SIZE_MB,
 };
+
+export class ImageKitUploadService implements ImageUploadService {
+  readonly maxImageSizeMB = MAX_IMAGE_SIZE_MB;
+
+  uploadProductImage(
+    options: UploadProductImageOptions
+  ): Promise<UploadProductImageResult> {
+    return uploadProductImage(options);
+  }
+
+  deleteProductImages(fileIds: string[]): Promise<{ deleted: number }> {
+    return deleteProductImages(fileIds);
+  }
+}
+
+export { MAX_IMAGE_SIZE_MB };
 
 export default ImageKitService;

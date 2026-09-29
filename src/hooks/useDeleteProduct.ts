@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Product } from '../core/types/product';
 import { useRepository } from './useRepository';
-import { ImageKitService } from '../services/imagekit';
+import { imageUploadService } from '../app/composition';
 
 export interface DeleteProductResult {
   deletedImages: number;
@@ -21,7 +21,7 @@ export function useDeleteProduct() {
       }
 
       try {
-        const { deleted } = await ImageKitService.deleteProductImages(fileIds);
+        const { deleted } = await imageUploadService.deleteProductImages(fileIds);
         return {
           deletedImages: deleted,
           failedImages: fileIds.length - deleted,
