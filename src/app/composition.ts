@@ -1,6 +1,7 @@
 import { BrandRepository } from '../core/repositories/brand.repository';
 import { CategoryRepository } from '../core/repositories/category.repository';
 import { ProductRepository } from '../core/repositories/product.repository';
+import type { AuthService } from '../core/auth/auth-service';
 import { MockProductRepository } from '../data/mock/mock-product.repository';
 import { MockCategoryRepository } from '../data/mock/mock-category.repository';
 import { MockBrandRepository } from '../data/mock/mock-brand.repository';
@@ -10,6 +11,7 @@ import { FirebaseBrandRepository } from '../data/firebase/firebase-brand.reposit
 import { CachedProductRepository } from '../services/cached-product.repository';
 import { CachedCategoryRepository } from '../services/cached-category.repository';
 import { CachedBrandRepository } from '../services/cached-brand.repository';
+import { FirebaseAuthService } from '../data/firebase/firebase-auth.adapter';
 
 /**
  * Composition root: the single place that decides which infrastructure
@@ -104,3 +106,10 @@ export function createRepositories(
 
 /** Singleton wired once at startup; consumed by `src/app/providers.tsx`. */
 export const repositories: RepositorySet = createRepositories();
+
+/**
+ * Active authentication backend. Swapping Firebase Auth for a backend
+ * session later means pointing this at the new adapter — the UI
+ * (`useAuth`, admin pages) stays untouched.
+ */
+export const authService: AuthService = new FirebaseAuthService();
