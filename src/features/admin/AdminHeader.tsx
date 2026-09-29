@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
-import { storageConfig } from '../../config/storage';
+import { siteConfig } from '../../config/site';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -29,10 +29,10 @@ export function AdminHeader() {
         <div className="flex items-center justify-between h-20 gap-4 md:gap-6">
           <Link to="/admin" className="shrink-0" onClick={() => setIsMenuOpen(false)}>
             <div className="text-2xl font-bold text-primary tracking-tight">
-              {import.meta.env.VITE_STORE_NAME}
+              {siteConfig.storeName}
             </div>
             <div className="text-sm text-ink-secondary -mt-0.5">
-              {user?.email || storageConfig.companyName}
+              {user?.email || siteConfig.companyName}
             </div>
           </Link>
 

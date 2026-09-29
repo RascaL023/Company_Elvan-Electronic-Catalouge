@@ -9,14 +9,15 @@ import {
 
 /**
  * Image URL utilities for different storage providers.
- * 
+ *
+ * Supported: `local` (default) and `imagekit` (active). `s3`,
+ * `cloudflare`, and `cloudinary` resolvers below are legacy paths kept
+ * for backwards compatibility only — do not add new providers.
+ *
  * Key concepts:
  * - For local: uses /assets/ or /images/ path
- * - For S3: uses https://bucket.s3.region.amazonaws.com/ or custom CDN
- * - For Cloudflare: uses https://{accountId}.r2.cloudflarestorage.com/ or custom domain
- * - For Cloudinary: uses https://res.cloudinary.com/{cloudName}/image/upload/
  * - For ImageKit: uses https://ik.imagekit.io/{imagekitId}/ with tr= transforms
- * 
+ *
  * Image keys in the database are stored as relative paths only
  * (e.g., "assets/images/products/fridge-1.jpg"). Full URLs are never stored.
  */
