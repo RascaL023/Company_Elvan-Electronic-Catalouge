@@ -5,6 +5,7 @@ import {
   ProductListResult,
 } from '../core/repositories/product.repository';
 import { Product } from '../core/types/product';
+import { CatalogProduct } from '../core/types/catalog';
 import { SimpleCache } from './cache';
 
 const TTL = 180_000;
@@ -26,9 +27,9 @@ export class CachedProductRepository implements ProductRepository {
     return result;
   }
 
-  async getAll(): Promise<Product[]> {
+  async getAll(): Promise<CatalogProduct[]> {
     const key = 'getAll';
-    const cached = this.cache.get<Product[]>(key);
+    const cached = this.cache.get<CatalogProduct[]>(key);
     if (cached) return cached;
     const result = await this.inner.getAll();
     this.cache.set(key, result, TTL);

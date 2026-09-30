@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Product } from '../../core/types/product';
+import { CatalogProduct } from '../../core/types/catalog';
 import { SortOption } from '../../core/types/common';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
@@ -15,7 +15,7 @@ export function ProductsPage() {
   const search = searchParams.get('search') || '';
   const sort = (searchParams.get('sort') as SortOption) || 'default';
   const category = searchParams.get('category') || null;
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
 
   const { categories } = useCategories();
   const {

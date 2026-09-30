@@ -17,5 +17,14 @@ service cloud.firestore {
       allow read: if true;
       allow write: if exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+
+    // Read-optimized catalog projection (catalog/snapshot).
+    // Publicly readable like the other catalog collections, but only
+    // admins may write it (kept in sync by product mutations and the
+    // rebuild script, which uses the Admin SDK and bypasses rules).
+    match /catalog/{document} {
+      allow read: if true;
+      allow write: if exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
   }
 }

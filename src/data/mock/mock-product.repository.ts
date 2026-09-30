@@ -5,6 +5,7 @@ import {
   ProductListResult,
 } from '../../core/repositories/product.repository';
 import { Product } from '../../core/types/product';
+import { CatalogProduct, toCatalogProduct } from '../../core/types/catalog';
 import { SortOption } from '../../core/types/common';
 
 const mockProducts: Product[] = [
@@ -96,7 +97,7 @@ const mockProducts: Product[] = [
 
 const DEFAULT_LIMIT = 24;
 
-function sortProducts(products: Product[], sort: SortOption): Product[] {
+function sortProducts(products: CatalogProduct[], sort: SortOption): CatalogProduct[] {
   const sorted = [...products];
   switch (sort) {
     case 'price-asc':
@@ -118,18 +119,18 @@ function sortProducts(products: Product[], sort: SortOption): Product[] {
 }
 
 export class MockProductRepository implements ProductRepository {
-  async getAll(): Promise<Product[]> {
-    const data = [...mockProducts];
-    return data;
+  async getAll(): Promise<CatalogProduct[]> {
+    return mockProducts.map(toCatalogProduct);
   }
 
   async list(options: ProductListOptions = {}): Promise<ProductListResult> {
     const { category, sort, search, cursor } = options;
     const pageSize = options.limit ?? DEFAULT_LIMIT;
 
+    const catalog = mockProducts.map(toCatalogProduct);
     let result = options.includeInactive
-      ? [...mockProducts]
-      : mockProducts.filter((p) => p.isActive);
+      ? [...catalog]
+      : catalog.filter((p) => p.isActive);
 
     if (category) {
       result = result.filter((p) => p.category === category);
