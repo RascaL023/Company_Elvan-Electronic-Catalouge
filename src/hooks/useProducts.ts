@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Product } from '../core/types/product';
+import { CatalogProduct } from '../core/types/catalog';
 import { SortOption } from '../core/types/common';
 import { useRepository } from './useRepository';
 
@@ -9,7 +9,7 @@ interface UseProductsOptions {
 }
 
 interface UseProductsReturn {
-  products: Product[];
+  products: CatalogProduct[];
   loading: boolean;
   loadingMore: boolean;
   error: string | null;
@@ -28,7 +28,7 @@ export function useProducts(
   const { productRepository } = useRepository();
   const pageSize = options.limit ?? 24;
   const includeInactive = options.includeInactive ?? false;
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);

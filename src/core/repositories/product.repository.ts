@@ -1,4 +1,5 @@
 import { Product } from '../types/product';
+import { CatalogProduct } from '../types/catalog';
 import { SortOption } from '../types/common';
 
 /**
@@ -42,7 +43,12 @@ export interface ProductListOptions {
 }
 
 export interface ProductListResult {
-  products: Product[];
+  /**
+   * Lightweight catalog projection (see `CatalogProduct`). The catalog
+   * listing never needs the full `Product` document — that is only read
+   * for the detail page via `getById`.
+   */
+  products: CatalogProduct[];
   hasMore: boolean;
   /**
    * Opaque token for the next page (null when there is no next page).
@@ -52,8 +58,13 @@ export interface ProductListResult {
 }
 
 export interface ProductRepository {
-  getAll(): Promise<Product[]>;
+  /**
+   * Full catalog projection, backed by the `catalog/snapshot` read model
+   * (one document read for the whole catalog).
+   */
+  getAll(): Promise<CatalogProduct[]>;
   list(options?: ProductListOptions): Promise<ProductListResult>;
+  /** Full canonical product, read from `products/{id}` for detail/edit. */
   getById(id: string): Promise<Product | null>;
   create(payload: ProductPayload): Promise<Product>;
   update(id: string, payload: Partial<ProductPayload>): Promise<Product>;

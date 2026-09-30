@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "check:boundaries": "bash scripts/check-boundaries.sh"
+    "check:boundaries": "bash scripts/check-boundaries.sh",
+    "rebuild:catalog": "node scripts/rebuild-catalog-snapshot.cjs",
+    "verify:catalog-read": "node scripts/verify-catalog-read-path.cjs"
   },
   "dependencies": {
     "firebase": "^12.16.0",

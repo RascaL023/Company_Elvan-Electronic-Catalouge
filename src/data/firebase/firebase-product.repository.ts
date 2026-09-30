@@ -3,12 +3,14 @@ import {
   getDocs,
   doc,
   getDoc,
-  addDoc,
-  setDoc,
-  updateDoc,
   deleteDoc,
+  updateDoc,
+  setDoc,
   orderBy,
   query,
+  runTransaction,
+  type Transaction,
+  type DocumentData,
 } from 'firebase/firestore/lite';
 import { getDb } from '../../config/firebase';
 import {
@@ -18,38 +20,78 @@ import {
   ProductListResult,
 } from '../../core/repositories/product.repository';
 import { Product } from '../../core/types/product';
-import { docToProduct } from './firebase-mapper';
+import { CatalogProduct, CatalogSnapshot, toCatalogProduct } from '../../core/types/catalog';
+import { docToProduct, productFromData, snapshotFromData } from './firebase-mapper';
 
 const COLLECTION = 'products';
+const CATALOG_COLLECTION = 'catalog';
+const SNAPSHOT_DOC = 'snapshot';
 const DEFAULT_LIMIT = 24;
 
+/**
+ * Thrown when `catalog/snapshot` has not been generated yet. Callers in
+ * the mutation path catch this to bootstrap the snapshot from
+ * `products/*` — the public read path deliberately does NOT fall back to
+ * a full collection query, which is exactly what this change removes.
+ */
+class SnapshotNotInitializedError extends Error {
+  constructor() {
+    super(
+      'catalog/snapshot does not exist yet. Run `npm run rebuild:catalog` ' +
+        '(or seed the project) to generate it.'
+    );
+    this.name = 'SnapshotNotInitializedError';
+  }
+}
+
 // --- CACHE MECHANISM ---
-let cachedProducts: Product[] | null = null;
+// The catalog is now a single document. Caching it in memory for a few
+// minutes turns repeated in-session navigations into zero reads.
+let cachedCatalog: CatalogProduct[] | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 8 * 60 * 1000; // 8 minutes
 
+function snapshotRef() {
+  const db = getDb();
+  return doc(db, CATALOG_COLLECTION, SNAPSHOT_DOC);
+}
+
+function upsertCatalog(list: CatalogProduct[], item: CatalogProduct): CatalogProduct[] {
+  const index = list.findIndex((p) => p.id === item.id);
+  if (index === -1) return [...list, item];
+  const next = [...list];
+  next[index] = item;
+  return next;
+}
+
 export class FirebaseProductRepository implements ProductRepository {
-  async getAll(): Promise<Product[]> {
+  /**
+   * Public catalog read path: ONE `getDoc(catalog/snapshot)` regardless
+   * of how many products exist. Never queries the whole `products`
+   * collection.
+   */
+  async getAll(): Promise<CatalogProduct[]> {
     const now = Date.now();
-    if (cachedProducts && (now - cacheTimestamp < CACHE_TTL)) {
-      return cachedProducts;
+    if (cachedCatalog && now - cacheTimestamp < CACHE_TTL) {
+      return cachedCatalog;
     }
 
-    const db = getDb();
-    const snapshot = await getDocs(
-      query(collection(db, COLLECTION), orderBy('createdAt', 'desc'))
-    );
-    cachedProducts = snapshot.docs.map(docToProduct);
+    const snapshot = await getDoc(snapshotRef());
+    if (!snapshot.exists()) {
+      throw new SnapshotNotInitializedError();
+    }
+
+    const products = snapshotFromData(snapshot.data()).products;
+    cachedCatalog = products;
     cacheTimestamp = now;
-    return cachedProducts;
+    return products;
   }
 
   async list(options: ProductListOptions = {}): Promise<ProductListResult> {
-    // Karena kita memakai cache, semua list, filter, sort, dan pagination
-    // diproses sepenuhnya di client-side (gratis read dan instan 0 latency).
-    // Kontraknya tetap application-level (lihat ProductListOptions), jadi
-    // implementasi API di masa depan boleh mengerjakannya server-side
-    // tanpa mengubah pemanggil.
+    // Semua list, filter, sort, dan pagination diproses sepenuhnya di
+    // client-side dari data snapshot (0 read tambahan). Kontraknya tetap
+    // application-level, jadi implementasi API di masa depan boleh
+    // mengerjakannya server-side tanpa mengubah pemanggil.
     return this.listClientSide(options);
   }
 
@@ -88,7 +130,7 @@ export class FirebaseProductRepository implements ProductRepository {
     };
   }
 
-  private sortProducts(products: Product[], sort?: string): Product[] {
+  private sortProducts(products: CatalogProduct[], sort?: string): CatalogProduct[] {
     const sorted = [...products];
     switch (sort) {
       case 'price-asc':
@@ -106,15 +148,13 @@ export class FirebaseProductRepository implements ProductRepository {
     return sorted;
   }
 
+  /**
+   * Full product detail — read from the canonical `products/{id}` doc.
+   * The catalog snapshot intentionally does not carry detail-only fields
+   * (description, full image array, image file ids).
+   */
   async getById(id: string): Promise<Product | null> {
-    // Cek cache dulu, kalau ada pakai cache. (Lebih hemat baca)
-    if (cachedProducts) {
-      const found = cachedProducts.find(p => p.id === id);
-      if (found) return found;
-    }
-
-    const db = getDb();
-    const ref = doc(db, COLLECTION, id);
+    const ref = doc(getDb(), COLLECTION, id);
     const snapshot = await getDoc(ref);
     if (!snapshot.exists()) return null;
     return docToProduct(snapshot);
@@ -124,27 +164,31 @@ export class FirebaseProductRepository implements ProductRepository {
     const db = getDb();
     const now = new Date().toISOString();
     const { id, ...rest } = payload;
-    const data = {
-      ...rest,
-      createdAt: now,
-      updatedAt: now,
-    };
-    
-    let product: Product;
-    if (id) {
-      const ref = doc(db, COLLECTION, id);
-      await setDoc(ref, data);
-      const snapshot = await getDoc(ref);
-      product = docToProduct(snapshot);
-    } else {
-      const ref = await addDoc(collection(db, COLLECTION), data);
-      const snapshot = await getDoc(ref);
-      product = docToProduct(snapshot);
+    // `doc()` gives us an id without writing, so the create can happen
+    // inside the snapshot transaction atomically.
+    const ref = id ? doc(db, COLLECTION, id) : doc(collection(db, COLLECTION));
+    const data = { ...rest, createdAt: now, updatedAt: now };
+    const product: Product = { ...rest, id: ref.id, createdAt: now, updatedAt: now };
+
+    try {
+      await this.runSnapshotMutation((tx, snapshot) => {
+        tx.set(ref, data);
+        return {
+          next: upsertCatalog(snapshot.products, toCatalogProduct(product)),
+          result: undefined,
+        };
+      });
+    } catch (err) {
+      if (err instanceof SnapshotNotInitializedError) {
+        await setDoc(ref, data);
+        await this.rebuildSnapshot();
+      } else {
+        throw err;
+      }
     }
 
-    // Update cache secara reaktif
-    if (cachedProducts) {
-      cachedProducts = [product, ...cachedProducts];
+    if (cachedCatalog) {
+      cachedCatalog = upsertCatalog(cachedCatalog, toCatalogProduct(product));
     }
     return product;
   }
@@ -153,28 +197,126 @@ export class FirebaseProductRepository implements ProductRepository {
     const db = getDb();
     const ref = doc(db, COLLECTION, id);
     const { id: _id, ...rest } = payload;
-    const data = {
-      ...rest,
-      updatedAt: new Date().toISOString(),
-    };
-    await updateDoc(ref, data);
-    const snapshot = await getDoc(ref);
-    const product = docToProduct(snapshot);
+    const now = new Date().toISOString();
 
-    // Update cache secara reaktif
-    if (cachedProducts) {
-      cachedProducts = cachedProducts.map(p => p.id === id ? product : p);
+    let product: Product;
+    try {
+      product = await this.runSnapshotMutation((tx, snapshot) => {
+        const projected = snapshot.products.find((p) => p.id === id);
+        // In a transaction all reads must come before writes; read both
+        // the snapshot and the product first, then write.
+        return tx.get(ref).then((existing) => {
+          if (!existing.exists()) {
+            throw new Error(`Product with id "${id}" not found`);
+          }
+          const merged: DocumentData = {
+            ...existing.data(),
+            ...rest,
+            updatedAt: now,
+          };
+          const updated = productFromData(id, merged);
+          tx.set(ref, merged);
+          return {
+            next: projected
+              ? upsertCatalog(snapshot.products, toCatalogProduct(updated))
+              : [...snapshot.products, toCatalogProduct(updated)],
+            result: updated,
+          };
+        });
+      });
+    } catch (err) {
+      if (err instanceof SnapshotNotInitializedError) {
+        await updateDoc(ref, { ...rest, updatedAt: now });
+        const after = await getDoc(ref);
+        product = productFromData(id, after.data() ?? {});
+        await this.rebuildSnapshot();
+      } else {
+        throw err;
+      }
+    }
+
+    if (cachedCatalog) {
+      cachedCatalog = upsertCatalog(cachedCatalog, toCatalogProduct(product));
     }
     return product;
   }
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    await deleteDoc(doc(db, COLLECTION, id));
+    const ref = doc(db, COLLECTION, id);
 
-    // Update cache secara reaktif
-    if (cachedProducts) {
-      cachedProducts = cachedProducts.filter(p => p.id !== id);
+    try {
+      await this.runSnapshotMutation((_tx, snapshot) => {
+        _tx.delete(ref);
+        return {
+          next: snapshot.products.filter((p) => p.id !== id),
+          result: undefined,
+        };
+      });
+    } catch (err) {
+      if (err instanceof SnapshotNotInitializedError) {
+        await deleteDoc(ref);
+        await this.rebuildSnapshot();
+      } else {
+        throw err;
+      }
     }
+
+    if (cachedCatalog) {
+      cachedCatalog = cachedCatalog.filter((p) => p.id !== id);
+    }
+  }
+
+  /**
+   * Read the snapshot and write the product mutation + the new snapshot
+   * in a single transaction, so a successful mutation can never leave
+   * the catalog permanently stale.
+   */
+  private async runSnapshotMutation<T>(
+    apply: (
+      tx: Transaction,
+      snapshot: CatalogSnapshot
+    ) => { next: CatalogProduct[]; result: T } | Promise<{ next: CatalogProduct[]; result: T }>
+  ): Promise<T> {
+    const db = getDb();
+    const ref = snapshotRef();
+    return runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) {
+        throw new SnapshotNotInitializedError();
+      }
+      const snapshot = snapshotFromData(snap.data());
+      const { next, result } = await apply(tx, snapshot);
+      tx.set(ref, {
+        version: snapshot.version + 1,
+        updatedAt: new Date().toISOString(),
+        products: next,
+      });
+      return result;
+    });
+  }
+
+  /**
+   * Regenerate the whole `catalog/snapshot` from `products/*`. Used to
+   * bootstrap a missing snapshot and by the rebuild script after bulk
+   * Admin-SDK writes. This is the ONLY place that queries the full
+   * collection.
+   */
+  async rebuildSnapshot(): Promise<CatalogProduct[]> {
+    const db = getDb();
+    const snapshot = await getDocs(
+      query(collection(db, COLLECTION), orderBy('createdAt', 'desc'))
+    );
+    const products = snapshot.docs.map((d) => toCatalogProduct(docToProduct(d)));
+
+    await setDoc(snapshotRef(), {
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      products,
+    });
+
+    cachedCatalog = products;
+    cacheTimestamp = Date.now();
+    return products;
   }
 }

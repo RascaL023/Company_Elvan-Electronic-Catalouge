@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal';
 import { Rating } from '../../components/ui/Rating';
-import { Product } from '../../core/types/product';
+import { CatalogProduct } from '../../core/types/catalog';
 import { formatPrice } from '../../utils/formatters';
 import { getCategoryName } from '../../utils/categories';
 import { ImageService } from '../../services/imageService';
 
 interface ProductModalProps {
-  product: Product;
+  product: CatalogProduct;
   onClose: () => void;
 }
 
@@ -37,7 +37,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         <div className="flex flex-col md:flex-row">
           <div className="md:w-1/2 p-8 bg-surface-alt flex items-center justify-center">
             <img
-              src={ImageService.getDetailUrl(product.images[0] || '')}
+              src={ImageService.getDetailUrl(product.thumbnail || '')}
               alt={product.name}
               className="w-full max-w-[250px] h-auto object-contain text-sm text-ink-muted text-center"
             />
@@ -50,9 +50,6 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               {product.name}
             </h2>
             <Rating rate={product.rating.rate} count={product.rating.count} />
-            <p className="text-ink-secondary text-sm leading-relaxed">
-              {product.description}
-            </p>
             <div className="mt-auto pt-4 flex flex-row lg:flex-col justify-between items-center lg:items-end lg:gap-4 border-t border-border">
               <div className="flex justify-start w-full">
                 <span className="text-3xl lg:text-2xl font-bold text-primary">

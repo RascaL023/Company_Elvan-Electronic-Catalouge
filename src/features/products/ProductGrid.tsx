@@ -1,12 +1,12 @@
-import { Product } from '../../core/types/product';
+import { CatalogProduct } from '../../core/types/catalog';
 import { ProductCard } from './ProductCard';
 import { LoadingGrid } from '../../components/feedback/LoadingGrid';
 import { Reveal } from '../../components/ui/Reveal';
 
 interface ProductGridProps {
-  products: Product[];
+  products: CatalogProduct[];
   loading: boolean;
-  onQuickView: (product: Product) => void;
+  onQuickView: (product: CatalogProduct) => void;
 }
 
 export function ProductGrid({

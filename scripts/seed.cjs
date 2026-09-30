@@ -19,12 +19,14 @@ if (!fs.existsSync(serviceAccountPath)) {
 const admin = require('firebase-admin');
 const serviceAccount = require(serviceAccountPath);
 
-admin.initializeApp({
+const app = admin.initializeApp({
   credential: admin.cert(serviceAccount),
 });
 
 const { getFirestore } = require('firebase-admin/firestore');
-const db = getFirestore();
+// Named database "default" (see firebase.json / src/config/firebase.ts);
+// the Admin SDK default "(default)" does not exist in this project.
+const db = getFirestore(app, 'default');
 
 function shortHash(input, length) {
   length = length || 6;
@@ -1068,6 +1070,14 @@ async function seed() {
       updatedAt: now,
     });
     console.log('  ✓ ' + product.name + ' (' + productId + ') => ' + resolvedImages[0]);
+  }
+
+  // Keep the public catalog read model in sync after bulk writes.
+  if (!isDryRun) {
+    console.log('\nRebuilding catalog/snapshot...');
+    const { rebuildCatalogSnapshot } = require('./rebuild-catalog-snapshot.cjs');
+    const catalogProducts = await rebuildCatalogSnapshot(db);
+    console.log('  ✓ catalog/snapshot rebuilt (' + catalogProducts.length + ' products)');
   }
 
   if (isDryRun) {

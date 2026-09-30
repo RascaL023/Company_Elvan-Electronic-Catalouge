@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Product } from '../../core/types/product';
+import { CatalogProduct } from '../../core/types/catalog';
 import { useProducts } from '../../hooks/useProducts';
 import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { useCategories } from '../../hooks/useCategories';
@@ -20,7 +20,7 @@ export function AdminDashboard() {
   const category = searchParams.get('category') || null;
   const { categories } = useCategories();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CatalogProduct | null>(null);
 
   const {
     products,
@@ -49,7 +49,7 @@ export function AdminDashboard() {
     const id = deleteTarget.id;
     setDeletingId(id);
     try {
-      const result = await deleteProduct(deleteTarget);
+      const result = await deleteProduct(deleteTarget.id);
       removeFromList(id);
       setDeleteTarget(null);
       if (result.failedImages > 0) {
@@ -190,9 +190,9 @@ export function AdminDashboard() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-surface-hover rounded-lg overflow-hidden shrink-0">
-                        {product.images[0] && (
+                        {product.thumbnail && (
                           <img
-                            src={ImageService.getThumbnailUrl(product.images[0])}
+                            src={ImageService.getThumbnailUrl(product.thumbnail)}
                             alt=""
                             className="w-full h-full object-cover"
                           />

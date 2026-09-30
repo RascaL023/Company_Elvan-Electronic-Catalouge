@@ -76,6 +76,28 @@ from the in-memory dataset; a future API may use a real database cursor.
 `category_id` / `brand_id` foreign keys, but the backend mapper must resolve
 them back to slugs so the domain shape stays unchanged.
 
+### Catalog snapshot read model (`catalog/snapshot`)
+
+`products/*` remains the source of truth. The public catalog does **not**
+read it directly: a read-optimized projection of every product lives in a
+single document, `catalog/snapshot`, so a cold catalog load costs **one**
+document read instead of one read per product.
+
+- Projection type `CatalogProduct` (`src/core/types/catalog.ts`): id,
+  name, slug, price, category, brand, primary image key, rating,
+  `isActive`, `createdAt`. Detail-only fields (description, full image
+  array, `imageFileIds`) are intentionally excluded.
+- `ProductRepository.list()` / `getAll()` return `CatalogProduct[]` and
+  read the snapshot; `getById()` still returns the full `Product` from
+  `products/{id}` for the detail page and the admin edit form.
+- Create/update/delete keep the snapshot in sync atomically through a
+  Firestore transaction (product write + snapshot write together), so a
+  successful mutation cannot leave the catalog stale.
+- Rebuild anytime with `npm run rebuild:catalog`
+  (`scripts/rebuild-catalog-snapshot.cjs`, Admin SDK). `scripts/seed.cjs`
+  rebuilds it automatically after seeding.
+- Rules: `catalog/snapshot` is publicly readable and admin-writable.
+
 ## Auth boundary
 
 Auth UI depends on the application-level contract in
@@ -222,10 +244,12 @@ Key ownership is declared in `src/vite-env.d.ts` and exemplified in
 
 ## Firestore & Security Rules
 
-Rules in `firestore.rules` cover three collections — `products`, `categories`, `brands`:
+Rules in `firestore.rules` cover four collections — `products`, `categories`, `brands`, `catalog`:
 
 - `read`: public.
-- `create/update/delete`: require `request.auth != null`.
+- `write`: require an `admins/{uid}` document for the signed-in user
+  (`catalog/snapshot` follows the same boundary as the other catalog
+  collections).
 
 Deploy after editing: `firebase deploy --only firestore:rules`.
 

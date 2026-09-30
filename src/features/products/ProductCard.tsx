@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom';
-import { Product } from '../../core/types/product';
+import { CatalogProduct } from '../../core/types/catalog';
 import { formatPrice } from '../../utils/formatters';
 import { getCategoryName } from '../../utils/categories';
 import { Rating } from '../../components/ui/Rating';
 import { ImageService } from '../../services/imageService';
 
 interface ProductCardProps {
-  product: Product;
-  onQuickView: (product: Product) => void;
+  product: CatalogProduct;
+  onQuickView: (product: CatalogProduct) => void;
 }
 
 export function ProductCard({ product, onQuickView }: ProductCardProps) {
-  const thumbnailUrl = ImageService.getPrimaryThumbnailUrl(product.images);
+  const thumbnailUrl = ImageService.getThumbnailUrl(product.thumbnail || '');
 
   return (
     <div className="bg-surface rounded-xl shadow-sm hover:-translate-y-1.5 hover:shadow-xl hover:border-primary/40 border-border transition-all duration-300 overflow-hidden flex flex-col group border">
