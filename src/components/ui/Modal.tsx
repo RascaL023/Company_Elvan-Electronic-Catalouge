@@ -4,9 +4,10 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  maxWidthClass?: string;
 }
 
-export function Modal({ open, onClose, children }: ModalProps) {
+export function Modal({ open, onClose, children, maxWidthClass = 'max-w-2xl' }: ModalProps) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -25,10 +26,10 @@ export function Modal({ open, onClose, children }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className={`bg-surface rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in ${maxWidthClass}`}>
         {children}
       </div>
     </div>

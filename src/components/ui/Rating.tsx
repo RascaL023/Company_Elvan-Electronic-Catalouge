@@ -8,13 +8,13 @@ export function Rating({ rate, count }: RatingProps) {
 
   return (
     <div className="flex items-center gap-1 text-sm">
-      <span className="text-yellow-400">
+      <span className="text-primary">
         {'★'.repeat(starCount)}
         {'☆'.repeat(5 - starCount)}
       </span>
-      <span className="text-gray-500 ml-1">{rate}</span>
+      <span className="text-ink-muted ml-1">{rate}</span>
       {count !== undefined && (
-        <span className="text-gray-400 text-xs">({count})</span>
+        <span className="text-ink-muted text-xs">({count})</span>
       )}
     </div>
   );

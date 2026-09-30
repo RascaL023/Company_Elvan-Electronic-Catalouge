@@ -1,29 +1,174 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { ProductsPage } from '../features/products/ProductsPage';
-import { ProductDetailPage } from '../features/product-detail/ProductDetailPage';
 import { NotFoundPage } from '../features/NotFoundPage';
-import {
-  AdminLayout,
-  AdminDashboard,
-  ProductForm,
-} from '../features/admin';
+
+const ProductDetailPage = lazy(() =>
+  import('../features/product-detail/ProductDetailPage').then((m) => ({
+    default: m.ProductDetailPage,
+  }))
+);
+
+const AdminLayout = lazy(() =>
+  import('../features/admin/AdminLayout').then((m) => ({
+    default: m.AdminLayout,
+  }))
+);
+
+const AdminDashboard = lazy(() =>
+  import('../features/admin/AdminDashboard').then((m) => ({
+    default: m.AdminDashboard,
+  }))
+);
+
+const ProductForm = lazy(() =>
+  import('../features/admin/ProductForm').then((m) => ({
+    default: m.ProductForm,
+  }))
+);
+
+const AdminCategoryList = lazy(() =>
+  import('../features/admin/AdminCategoryList').then((m) => ({
+    default: m.AdminCategoryList,
+  }))
+);
+
+const CategoryForm = lazy(() =>
+  import('../features/admin/CategoryForm').then((m) => ({
+    default: m.CategoryForm,
+  }))
+);
+
+const AdminBrandList = lazy(() =>
+  import('../features/admin/AdminBrandList').then((m) => ({
+    default: m.AdminBrandList,
+  }))
+);
+
+const BrandForm = lazy(() =>
+  import('../features/admin/BrandForm').then((m) => ({
+    default: m.BrandForm,
+  }))
+);
+
+const LoginPage = lazy(() =>
+  import('../features/auth/LoginPage').then((m) => ({
+    default: m.LoginPage,
+  }))
+);
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
 
 export const router = createBrowserRouter([
   {
     element: <PageLayout />,
     children: [
       { path: '/', element: <ProductsPage /> },
-      { path: '/product/:id', element: <ProductDetailPage /> },
+      {
+        path: '/product/:id',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ProductDetailPage />
+          </Suspense>
+        ),
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
   {
-    element: <AdminLayout />,
+    path: '/admin/login',
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <LoginPage />
+      </Suspense>
+    ),
+  },
+  {
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <AdminLayout />
+      </Suspense>
+    ),
     children: [
-      { path: '/admin', element: <AdminDashboard /> },
-      { path: '/admin/products/new', element: <ProductForm /> },
-      { path: '/admin/products/:id/edit', element: <ProductForm /> },
+      {
+        path: '/admin',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminDashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/products/new',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ProductForm />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/products/:id/edit',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ProductForm />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/categories',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminCategoryList />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/categories/new',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CategoryForm />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/categories/:id/edit',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CategoryForm />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/brands',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminBrandList />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/brands/new',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <BrandForm />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/admin/brands/:id/edit',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <BrandForm />
+          </Suspense>
+        ),
+      },
     ],
   },
 ]);

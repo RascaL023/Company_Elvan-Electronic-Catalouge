@@ -1,3 +1,205 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #5A94C7;
+    --color-primary-light: #8FBAE0;
+    --color-primary-dark: #417DB8;
+    --color-primary-bg: #EDF4FA;
+    --color-primary-text: #ffffff;
+    --color-primary-muted: #9DBDE3;
+
+    --color-surface: #ffffff;
+    --color-surface-alt: #F3F3F4;
+    --color-surface-hover: #F8F8F8;
+
+    --color-ink: #0D0C22;
+    --color-ink-secondary: #6E6D7A;
+    --color-ink-muted: #9E9EA7;
+
+    --color-border: #E7E7E9;
+    --color-link: #0066FF;
+    --color-btn-dark: #0D0C22;
+  }
+
+  .dark {
+    --color-primary: #6BB6FF;
+    --color-primary-light: #3D8BD4;
+    --color-primary-dark: #89C7FF;
+    --color-primary-bg: #1C283B;
+    --color-primary-text: #0F0E1A;
+    --color-primary-muted: #A0CDFF;
+
+    --color-surface: #1A1927;
+    --color-surface-alt: #0F0E1A;
+    --color-surface-hover: #252435;
+
+    --color-ink: #FFFFFF;
+    --color-ink-secondary: #E8E7F0;
+    --color-ink-muted: #A8A7B8;
+
+    --color-border: #2F2E42;
+    --color-link: #6BB6FF;
+    --color-btn-dark: #2F2E42;
+  }
+
+  html.dark {
+    background-color: var(--color-surface-alt);
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out both;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.5s ease-out both;
+  }
+
+  .animate-toast-in {
+    animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-float {
+    animation: float 3.5s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 3s ease-in-out infinite;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(90, 148, 199, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px 2px rgba(90, 148, 199, 0.35);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-surface-hover);
+}
+
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+
+.dark .skeleton-shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-down,
+  .animate-toast-in,
+  .animate-float,
+  .animate-glow {
+    animation: none;
+  }
+
+  .skeleton-shimmer::after {
+    animation: none;
+  }
+}

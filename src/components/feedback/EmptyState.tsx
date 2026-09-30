@@ -4,10 +4,10 @@ interface EmptyStateProps {
 
 export function EmptyState({ query }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+    <div className="flex flex-col items-center justify-center py-20 px-4 text-center animate-fade-up">
+      <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mb-4 animate-float">
         <svg
-          className="w-8 h-8 text-gray-400"
+          className="w-8 h-8 text-ink-muted"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -20,10 +20,10 @@ export function EmptyState({ query }: EmptyStateProps) {
           />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <h3 className="text-lg font-semibold text-ink mb-2">
         No products found
       </h3>
-      <p className="text-gray-500 max-w-md">
+      <p className="text-ink-muted max-w-md">
         {query
           ? `No results for "${query}". Try a different search term.`
           : 'No products are available at the moment.'}

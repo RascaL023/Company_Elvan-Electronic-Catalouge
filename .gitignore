@@ -1,4 +1,15 @@
 .private
+.agents
+service-account.json
+service-account-new.json
+imagekit-fileid-map.json
+
+##### FIREBASE #####
+**.cache
+# firebase**
+# firestore**
+# .firebase**
+# skills-lock.json
 
 node_modules/
 dist/

@@ -1,5 +1,11 @@
-import { ProductRepository, ProductPayload } from '../../core/repositories/product.repository';
+import {
+  ProductRepository,
+  ProductPayload,
+  ProductListOptions,
+  ProductListResult,
+} from '../../core/repositories/product.repository';
 import { Product } from '../../core/types/product';
+import { SortOption } from '../../core/types/common';
 
 const mockProducts: Product[] = [
   {
@@ -10,7 +16,7 @@ const mockProducts: Product[] = [
     description:
       'Refrigerator Side by Side Samsung RS64R5331B4 dengan kapasitas 642L. Dilengkapi Digital Inverter Technology, Twin Cooling Plus, dan All-around Cooling. Memiliki fitur Ice Maker otomatis, display digital touch, dan pengaturan suhu presisi. Cocok untuk keluarga besar yang membutuhkan ruang penyimpanan maksimal dengan efisiensi energi tinggi.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigator/Kulkas1.webp'],
+    images: ['assets/images/products/refrigerator/pra-15crx.webp'],
     rating: { rate: 4.7, count: 234 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -24,7 +30,7 @@ const mockProducts: Product[] = [
     description:
       'Kulkas 2 Pintu LG GN-B215SQMT dengan kapasitas 215L. Teknologi Smart Inverter Compressor menjamin efisiensi energi dan ketahanan hingga 10 tahun garansi kompresor. Fitur Multi Air Flow memastikan suhu merata ke seluruh bagian kulkas. Desain elegan dengan interior LED yang hemat energi.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigator/Kulkas2.jpg'],
+    images: ['assets/images/products/refrigerator/pra-18mow.webp'],
     rating: { rate: 4.5, count: 189 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -38,7 +44,7 @@ const mockProducts: Product[] = [
     description:
       'Kulkas 1 Pintu Sharp SJ-317MG kapasitas 170L dengan teknologi Pendingin Cepat yang mampu mendinginkan minuman dalam waktu singkat. Rak kaca tempered berkualitas tinggi, konsumsi daya rendah, dan kompresor hemat energi. Cocok untuk kebutuhan keluarga kecil, kos-kosan, atau sebagai kulkas tambahan.',
     category: 'refrigerator',
-    images: ['assets/images/products/refrigator/Kulkas3.jpg'],
+    images: ['assets/images/products/refrigerator/sj-x187mg-db.webp'],
     rating: { rate: 4.3, count: 156 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -52,7 +58,7 @@ const mockProducts: Product[] = [
     description:
       'Samsung 43-inch 4K UHD Smart TV dengan Crystal Display dan HDR. PurColor technology menghasilkan gambar yang lebih hidup dan natural. Smart Hub terintegrasi untuk akses Netflix, YouTube, Disney+ dan berbagai aplikasi streaming lainnya. Desain AirSlim yang tipis dan elegan.',
     category: 'television',
-    images: ['assets/images/products/television/tv-samsung-43.jpg'],
+    images: ['assets/images/products/television/pld-24tv1853.jpeg'],
     rating: { rate: 4.6, count: 312 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -66,7 +72,7 @@ const mockProducts: Product[] = [
     description:
       'LG 55-inch 4K NanoCell Smart TV dengan teknologi NanoCell untuk warna yang lebih akurat dan jernih dari sudut pandang mana pun. Dilengkapi dengan α5 Gen5 AI Processor 4K, HDR10 Pro, dan webOS 6.0. Dolby Digital Plus memberikan pengalaman audio yang immersive.',
     category: 'television',
-    images: ['assets/images/products/television/tv-lg-55.jpg'],
+    images: ['assets/images/products/television/pld-32tv1755.webp'],
     rating: { rate: 4.5, count: 278 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -80,7 +86,7 @@ const mockProducts: Product[] = [
     description:
       'Xiaomi Mi TV 4A 32-inch HD Ready Smart TV dengan PatchWall UI yang intuitif. Dukungan untuk berbagai platform streaming, koneksi WiFi built-in, dan desain frameless yang modern. Cocok untuk kamar tidur atau ruang keluarga kecil dengan budget terbatas.',
     category: 'television',
-    images: ['assets/images/products/television/tv-xiaomi-32.jpg'],
+    images: ['assets/images/products/television/pld-32v1853.webp'],
     rating: { rate: 4.2, count: 445 },
     isActive: true,
     createdAt: '2024-01-15T08:00:00Z',
@@ -88,14 +94,70 @@ const mockProducts: Product[] = [
   },
 ];
 
-function generateId(): string {
-  return `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+const DEFAULT_LIMIT = 24;
+
+function sortProducts(products: Product[], sort: SortOption): Product[] {
+  const sorted = [...products];
+  switch (sort) {
+    case 'price-asc':
+      sorted.sort((a, b) => a.price - b.price);
+      break;
+    case 'price-desc':
+      sorted.sort((a, b) => b.price - a.price);
+      break;
+    case 'rating-desc':
+      sorted.sort((a, b) => b.rating.rate - a.rating.rate);
+      break;
+    default:
+      sorted.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  }
+  return sorted;
 }
 
 export class MockProductRepository implements ProductRepository {
   async getAll(): Promise<Product[]> {
     const data = [...mockProducts];
     return data;
+  }
+
+  async list(options: ProductListOptions = {}): Promise<ProductListResult> {
+    const { category, sort, search, cursor } = options;
+    const pageSize = options.limit ?? DEFAULT_LIMIT;
+
+    let result = options.includeInactive
+      ? [...mockProducts]
+      : mockProducts.filter((p) => p.isActive);
+
+    if (category) {
+      result = result.filter((p) => p.category === category);
+    }
+
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q));
+    }
+
+    result = sortProducts(result, sort ?? 'default');
+
+    let startIndex = 0;
+    if (cursor) {
+      const cursorIndex = result.findIndex((p) => p.id === cursor);
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const paged = result.slice(startIndex, startIndex + pageSize);
+    const hasMore = startIndex + pageSize < result.length;
+
+    return {
+      products: paged,
+      hasMore,
+      cursor: paged.length > 0 ? paged[paged.length - 1].id : null,
+    };
   }
 
   async getById(id: string): Promise<Product | null> {
@@ -105,9 +167,10 @@ export class MockProductRepository implements ProductRepository {
 
   async create(payload: ProductPayload): Promise<Product> {
     const now = new Date().toISOString();
+    const id = payload.id || `prod-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const product: Product = {
       ...payload,
-      id: generateId(),
+      id,
       createdAt: now,
       updatedAt: now,
     };

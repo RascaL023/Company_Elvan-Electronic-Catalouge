@@ -1,4 +1,11 @@
-import { storageConfig, isLocalStorage, isS3Storage, isCloudflareStorage, isCloudinaryStorage } from '../config/storage';
+import {
+  storageConfig,
+  isLocalStorage,
+  isS3Storage,
+  isCloudflareStorage,
+  isCloudinaryStorage,
+  isImageKitStorage,
+} from '../config/storage';
 
 /**
  * Image URL utilities for different storage providers.
@@ -8,9 +15,10 @@ import { storageConfig, isLocalStorage, isS3Storage, isCloudflareStorage, isClou
  * - For S3: uses https://bucket.s3.region.amazonaws.com/ or custom CDN
  * - For Cloudflare: uses https://{accountId}.r2.cloudflarestorage.com/ or custom domain
  * - For Cloudinary: uses https://res.cloudinary.com/{cloudName}/image/upload/
+ * - For ImageKit: uses https://ik.imagekit.io/{imagekitId}/ with tr= transforms
  * 
- * Image keys in the database are stored as relative paths (e.g., "products/refrigerator-1.jpg")
- * or as Cloudinary public IDs (e.g., "products/refrigerator-1").
+ * Image keys in the database are stored as relative paths only
+ * (e.g., "assets/images/products/fridge-1.jpg"). Full URLs are never stored.
  */
 
 /**
@@ -109,26 +117,53 @@ function getCloudinaryUrl(key: string, options?: { width?: number; height?: numb
 }
 
 /**
+ * Generate ImageKit URL.
+ * Keys are stored as relative paths (e.g., "assets/images/products/fridge-1.jpg")
+ * and resolved against the ImageKit url endpoint. Transforms are appended via
+ * the ImageKit tr= query parameter.
+ */
+function getImageKitUrl(key: string, options?: { width?: number; height?: number; quality?: string }): string {
+  const { imagekitUrlEndpoint } = storageConfig;
+
+  if (!imagekitUrlEndpoint) {
+    console.warn(
+      `[ImageResolver] ImageKit storage selected but VITE_IMAGEKIT_URL_ENDPOINT is not set. ` +
+      `Falling back to local asset path.`
+    );
+    return getLocalAssetPath(key);
+  }
+
+  const cleanKey = key.startsWith('/') ? key.slice(1) : key;
+  let url = `${imagekitUrlEndpoint.replace(/\/$/, '')}/${cleanKey}`;
+
+  if (options?.width || options?.height || options?.quality) {
+    const transformations = [];
+    if (options.width) transformations.push(`w-${options.width}`);
+    if (options.height) transformations.push(`h-${options.height}`);
+    if (options.quality) transformations.push(`q-${options.quality}`);
+    else transformations.push('q-70');
+    url += `?tr=${transformations.join(',')}`;
+  }
+
+  return url;
+}
+
+/**
  * Get the full URL for a single image key.
  * 
- * @param key - The image key/path stored in the database (e.g., "products/fridge-1.jpg")
+ * @param key - The image key/path stored in the database (e.g., "assets/images/products/fridge-1.jpg")
  * @param options - Optional transformation options for supported providers
  * @returns Full URL to the image
  * 
  * Usage:
- *   getImageUrl('products/fridge-1.jpg')
- *   getImageUrl('products/fridge-1', { width: 400, height: 300 })
+ *   getImageUrl('assets/images/products/fridge-1.jpg')
+ *   getImageUrl('assets/images/products/fridge-1.jpg', { width: 400, height: 300 })
  */
 export function getImageUrl(key: string, options?: { width?: number; height?: number; quality?: string }): string {
   if (!key) {
     return storageConfig.placeholderImageUrl;
   }
-  
-  // If it's already a full URL, return as-is
-  if (key.startsWith('http://') || key.startsWith('https://')) {
-    return key;
-  }
-  
+
   if (isLocalStorage) {
     return getLocalAssetPath(key);
   }
@@ -143,6 +178,10 @@ export function getImageUrl(key: string, options?: { width?: number; height?: nu
   
   if (isCloudinaryStorage) {
     return getCloudinaryUrl(key, options);
+  }
+  
+  if (isImageKitStorage) {
+    return getImageKitUrl(key, options);
   }
   
   // Fallback to local

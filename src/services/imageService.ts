@@ -27,6 +27,16 @@ export const ImageService = {
   },
 
   /**
+   * Get thumbnail URL for the primary image of a product
+   */
+  getPrimaryThumbnailUrl(images: string[] | undefined): string {
+    if (!images || images.length === 0) {
+      return storageConfig.placeholderImageUrl;
+    }
+    return getThumbnailUrl(images[0]);
+  },
+
+  /**
    * Get thumbnail URL (small, for listings)
    */
   getThumbnailUrl(key: string): string {

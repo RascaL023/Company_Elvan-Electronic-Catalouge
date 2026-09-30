@@ -1,17 +1,16 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ProductPayload } from '../../core/repositories/product.repository';
 import { Category } from '../../core/types/category';
+import { Brand } from '../../core/types/brand';
 import { useRepository } from '../../hooks/useRepository';
-
-function toSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
+import { generateProductId, toSlug } from '../../utils/hash';
+import { ImageKitService, MAX_IMAGE_SIZE_MB } from '../../services/imagekit';
+import ImageService from '../../services/imageService';
+import { useToast } from '../../contexts/ToastContext';
 
 interface FormData {
+  productId: string;
   name: string;
   slug: string;
   price: string;
@@ -19,12 +18,14 @@ interface FormData {
   category: string;
   brand: string;
   images: string[];
+  imageFileIds: string[];
   isActive: boolean;
   ratingRate: string;
   ratingCount: string;
 }
 
 const emptyForm: FormData = {
+  productId: '',
   name: '',
   slug: '',
   price: '',
@@ -32,6 +33,7 @@ const emptyForm: FormData = {
   category: '',
   brand: '',
   images: [''],
+  imageFileIds: [],
   isActive: true,
   ratingRate: '0',
   ratingCount: '0',
@@ -41,23 +43,31 @@ export function ProductForm() {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { productRepository, categoryRepository } = useRepository();
+  const { productRepository, categoryRepository, brandRepository } = useRepository();
+  const toast = useToast();
 
   const [form, setForm] = useState<FormData>(emptyForm);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState<string | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [idManuallyEdited, setIdManuallyEdited] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<{ index: number; message: string } | null>(null);
+  const originalImagesRef = useRef<{ key: string; fileId: string }[]>([]);
 
   useEffect(() => {
     categoryRepository.getAll().then(setCategories).catch(() => {});
+    brandRepository.getAll().then(setBrands).catch(() => {});
     if (isEdit && id) {
       productRepository
         .getById(id)
         .then((product) => {
           if (product) {
             setForm({
+              productId: id,
               name: product.name,
               slug: product.slug,
               price: String(product.price),
@@ -66,10 +76,18 @@ export function ProductForm() {
               brand: product.brand || '',
               images:
                 product.images.length > 0 ? [...product.images] : [''],
+              imageFileIds: product.imageFileIds
+                ? [...product.imageFileIds]
+                : [],
               isActive: product.isActive,
               ratingRate: String(product.rating.rate),
               ratingCount: String(product.rating.count),
             });
+            originalImagesRef.current = product.images.map((key, i) => ({
+              key,
+              fileId: product.imageFileIds?.[i] ?? '',
+            }));
+            setIdManuallyEdited(true);
           } else {
             setError('Product not found');
           }
@@ -79,7 +97,7 @@ export function ProductForm() {
         )
         .finally(() => setLoading(false));
     }
-  }, [id, isEdit, productRepository, categoryRepository]);
+  }, [id, isEdit, productRepository, categoryRepository, brandRepository]);
 
   const handleField = (
     field: keyof FormData,
@@ -90,23 +108,30 @@ export function ProductForm() {
       if (field === 'name' && !slugManuallyEdited) {
         next.slug = toSlug(String(value));
       }
+      if (!idManuallyEdited && !isEdit) {
+        const brand = field === 'brand' ? String(value) : prev.brand;
+        const category = field === 'category' ? String(value) : prev.category;
+        const name = field === 'name' ? String(value) : prev.name;
+        if (brand && category && name) {
+          next.productId = generateProductId(brand, category, name);
+        }
+      }
       return next;
     });
   };
 
-  const handleImageChange = (index: number, value: string) => {
-    const updated = [...form.images];
-    updated[index] = value;
-    handleField('images', updated);
-  };
-
   const addImageField = () => {
     handleField('images', [...form.images, '']);
+    setForm((prev) => ({ ...prev, imageFileIds: [...prev.imageFileIds, ''] }));
   };
 
   const removeImageField = (index: number) => {
     const updated = form.images.filter((_, i) => i !== index);
-    handleField('images', updated.length === 0 ? [''] : updated);
+    setForm((prev) => ({
+      ...prev,
+      images: updated.length === 0 ? [''] : updated,
+      imageFileIds: prev.imageFileIds.filter((_, i) => i !== index),
+    }));
   };
 
   const moveImage = (index: number, direction: 'up' | 'down') => {
@@ -114,7 +139,51 @@ export function ProductForm() {
     if (target < 0 || target >= form.images.length) return;
     const updated = [...form.images];
     [updated[index], updated[target]] = [updated[target], updated[index]];
-    handleField('images', updated);
+    const updatedFileIds = [...form.imageFileIds];
+    [updatedFileIds[index], updatedFileIds[target]] = [updatedFileIds[target], updatedFileIds[index]];
+    setForm((prev) => ({ ...prev, images: updated, imageFileIds: updatedFileIds }));
+  };
+
+  const handleImageUpload = (
+    index: number,
+    file: File,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      setUploadError({
+        index,
+        message: `Image exceeds the ${MAX_IMAGE_SIZE_MB}MB limit`,
+      });
+      event.target.value = '';
+      return;
+    }
+    setUploadingIndex(index);
+    setUploadError(null);
+    ImageKitService.uploadProductImage({
+      file,
+      category: form.category,
+      slug: form.slug || toSlug(form.name),
+    })
+      .then(({ key, fileId }) => {
+        setForm((prev) => {
+          const images = [...prev.images];
+          const imageFileIds = prev.imageFileIds.length
+            ? [...prev.imageFileIds]
+            : prev.images.map(() => '');
+          images[index] = key;
+          imageFileIds[index] = fileId;
+          return { ...prev, images, imageFileIds };
+        });
+      })
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : 'Upload failed';
+        setUploadError({ index, message });
+        toast.error('Upload gambar gagal: ' + message);
+      })
+      .finally(() => {
+        setUploadingIndex(null);
+        event.target.value = '';
+      });
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -129,14 +198,20 @@ export function ProductForm() {
       return;
     }
 
+    const paired = form.images
+      .map((img, i) => ({ img: img.trim(), fileId: form.imageFileIds[i] ?? '' }))
+      .filter((p) => p.img !== '');
+
     const payload: ProductPayload = {
+      id: form.productId.trim() || undefined,
       name: form.name.trim(),
       slug: form.slug || toSlug(form.name),
       price,
       description: form.description.trim(),
       category: form.category,
       brand: form.brand.trim() || undefined,
-      images: form.images.filter((img) => img.trim() !== ''),
+      images: paired.map((p) => p.img),
+      imageFileIds: paired.map((p) => p.fileId),
       isActive: form.isActive,
       rating: {
         rate: Math.min(5, Math.max(0, Number(form.ratingRate) || 0)),
@@ -144,21 +219,37 @@ export function ProductForm() {
       },
     };
 
-    if (payload.images.length === 0) {
-      setError('At least one image key is required');
-      setSaving(false);
-      return;
-    }
+    // Image requirement is now optional
+    // if (payload.images.length === 0) { ... }
 
     try {
       if (isEdit && id) {
+        const newKeys = new Set(paired.map((p) => p.img));
+        const removedFileIds = originalImagesRef.current
+          .filter((orig) => orig.key && !newKeys.has(orig.key))
+          .map((orig) => orig.fileId)
+          .filter((fileId) => fileId !== '');
+
         await productRepository.update(id, payload);
+
+        if (removedFileIds.length > 0) {
+          try {
+            await ImageKitService.deleteProductImages(removedFileIds);
+          } catch (deleteErr) {
+            const message =
+              deleteErr instanceof Error ? deleteErr.message : 'Failed to delete image';
+            toast.error('Produk tersimpan, tapi sebagian gambar gagal dihapus: ' + message);
+          }
+        }
+        toast.success('Produk berhasil diperbarui');
       } else {
         await productRepository.create(payload);
+        toast.success('Produk berhasil dibuat');
       }
       navigate('/admin');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save product');
+      toast.error(err instanceof Error ? err.message : 'Gagal menyimpan produk');
     } finally {
       setSaving(false);
     }
@@ -169,7 +260,7 @@ export function ProductForm() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-10 bg-gray-200 rounded-lg" />
+            <div key={i} className="h-10 bg-surface-hover rounded-lg" />
           ))}
         </div>
       </div>
@@ -178,7 +269,7 @@ export function ProductForm() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="text-2xl font-bold text-ink mb-6">
         {isEdit ? 'Edit Product' : 'New Product'}
       </h1>
 
@@ -189,8 +280,8 @@ export function ProductForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Basic Info</h2>
+        <div className="bg-surface rounded-lg border border-border p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-ink">Basic Info</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
@@ -201,8 +292,26 @@ export function ProductForm() {
                 required
                 value={form.name}
                 onChange={(e) => handleField('name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="productId">Product ID</Label>
+              <input
+                id="productId"
+                type="text"
+                value={form.productId}
+                onChange={(e) => {
+                  setIdManuallyEdited(true);
+                  handleField('productId', e.target.value);
+                }}
+                placeholder={!idManuallyEdited && form.brand && form.category && form.name ? generateProductId(form.brand, form.category, form.name) : 'Auto-generated'}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+              <p className="mt-1 text-xs text-ink-muted">
+                Leave empty to auto-generate from brand, category, and name.
+              </p>
             </div>
 
             <div>
@@ -216,7 +325,7 @@ export function ProductForm() {
                   setSlugManuallyEdited(true);
                   handleField('slug', e.target.value);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
 
@@ -229,7 +338,7 @@ export function ProductForm() {
                 min={0}
                 value={form.price}
                 onChange={(e) => handleField('price', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
 
@@ -240,7 +349,7 @@ export function ProductForm() {
                 required
                 value={form.category}
                 onChange={(e) => handleField('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 <option value="">Select category</option>
                 {categories.map((cat) => (
@@ -253,13 +362,20 @@ export function ProductForm() {
 
             <div>
               <Label htmlFor="brand">Brand</Label>
-              <input
+              <select
                 id="brand"
-                type="text"
+                required
                 value={form.brand}
                 onChange={(e) => handleField('brand', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              >
+                <option value="">Select brand</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.slug}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -270,76 +386,117 @@ export function ProductForm() {
               rows={4}
               value={form.description}
               onChange={(e) => handleField('description', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+        <div className="bg-surface rounded-lg border border-border p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Images</h2>
+            <h2 className="text-lg font-semibold text-ink">Images</h2>
             <button
               type="button"
               onClick={addImageField}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+              disabled={uploadingIndex !== null}
+              className="text-sm font-medium text-primary hover:text-primary-dark disabled:opacity-50"
             >
               + Add Image
             </button>
           </div>
-          <p className="text-xs text-gray-500">
-            First image is the primary. Drag via buttons to reorder.
+          <p className="text-xs text-ink-muted">
+            Upload via ImageKit (max {MAX_IMAGE_SIZE_MB}MB each). First image is
+            the primary. Drag via buttons to reorder.
           </p>
 
           {form.images.map((key, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <span className="text-xs font-mono text-gray-400 w-6 text-right shrink-0">
-                {index === 0 ? '★' : index}
+            <div key={index} className="flex items-start gap-3">
+              <span className="text-xs font-mono text-ink-muted w-6 text-right shrink-0 pt-1">
+                {index === 0 ? '\u2605' : index}
               </span>
-              <input
-                type="text"
-                value={key}
-                placeholder="e.g. assets/images/products/refrigator/image.jpg"
-                onChange={(e) => handleImageChange(index, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <button
-                type="button"
-                onClick={() => moveImage(index, 'up')}
-                disabled={index === 0}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                title="Move up"
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => moveImage(index, 'down')}
-                disabled={index === form.images.length - 1}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                title="Move down"
-              >
-                ↓
-              </button>
-              {form.images.length > 1 && (
+              <div className="w-16 h-16 rounded-lg border border-border bg-surface-hover overflow-hidden shrink-0 flex items-center justify-center">
+                {key ? (
+                  <img
+                    src={ImageService.getThumbnailUrl(key)}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-ink-muted text-lg">+</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(index, file, e);
+                  }}
+                  disabled={uploadingIndex !== null}
+                  className="block w-full text-xs text-ink-muted file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-surface-hover file:text-sm file:font-medium file:text-ink-secondary file:cursor-pointer hover:file:bg-border disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                {key ? (
+                  <p
+                    className="mt-1 text-xs font-mono text-ink-muted truncate"
+                    title={key}
+                  >
+                    {key}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-ink-muted">
+                    Choose a file to upload
+                  </p>
+                )}
+                {uploadingIndex === index && (
+                  <p className="mt-1 text-xs text-primary">Uploading...</p>
+                )}
+                {uploadError?.index === index && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {uploadError.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-1 pt-1 shrink-0">
                 <button
                   type="button"
-                  onClick={() => removeImageField(index)}
-                  className="p-2 text-red-400 hover:text-red-600"
-                  title="Remove"
+                  onClick={() => moveImage(index, 'up')}
+                  disabled={index === 0 || uploadingIndex !== null}
+                  className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
+                  title="Move up"
                 >
-                  ×
+                  {'\u2191'}
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={() => moveImage(index, 'down')}
+                  disabled={index === form.images.length - 1 || uploadingIndex !== null}
+                  className="p-2 text-ink-muted hover:text-ink-secondary disabled:opacity-30"
+                  title="Move down"
+                >
+                  {'\u2193'}
+                </button>
+                {!(form.images.length === 1 && !form.images[0]) && (
+                  <button
+                    type="button"
+                    onClick={() => removeImageField(index)}
+                    disabled={uploadingIndex !== null}
+                    className="p-2 text-red-400 hover:text-red-600 disabled:opacity-30"
+                    title="Remove"
+                  >
+                    {'\u00d7'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">Rating & Status</h2>
+        <div className="bg-surface rounded-lg border border-border p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-ink">Rating & Status</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="ratingRate">Rating (0–5)</Label>
+              <Label htmlFor="ratingRate">Rating (0\u20135)</Label>
               <input
                 id="ratingRate"
                 type="number"
@@ -348,7 +505,7 @@ export function ProductForm() {
                 step="0.1"
                 value={form.ratingRate}
                 onChange={(e) => handleField('ratingRate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
             <div>
@@ -359,7 +516,7 @@ export function ProductForm() {
                 min="0"
                 value={form.ratingCount}
                 onChange={(e) => handleField('ratingCount', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
             <div className="flex items-end pb-2">
@@ -368,9 +525,9 @@ export function ProductForm() {
                   type="checkbox"
                   checked={form.isActive}
                   onChange={(e) => handleField('isActive', e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-ink-secondary">
                   Active
                 </span>
               </label>
@@ -382,14 +539,14 @@ export function ProductForm() {
           <button
             type="button"
             onClick={() => navigate('/admin')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-ink-secondary bg-surface border border-border rounded-lg hover:bg-surface-hover transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            className="px-6 py-2 text-sm font-medium text-primary-text bg-primary rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : isEdit ? 'Update Product' : 'Create Product'}
           </button>
@@ -403,7 +560,7 @@ function Label({ htmlFor, children }: { htmlFor: string; children: string }) {
   return (
     <label
       htmlFor={htmlFor}
-      className="block text-sm font-medium text-gray-700 mb-1"
+      className="block text-sm font-medium text-ink-secondary mb-1"
     >
       {children}
     </label>
