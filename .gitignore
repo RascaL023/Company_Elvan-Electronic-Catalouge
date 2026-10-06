@@ -20,3 +20,4 @@ dist/
 !.env.example
 *.tsbuildinfo
 vite.config.ts.timestamp-*
+**.bak
