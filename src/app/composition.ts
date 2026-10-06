@@ -14,6 +14,12 @@ import { CachedCategoryRepository } from '../services/cached-category.repository
 import { CachedBrandRepository } from '../services/cached-brand.repository';
 import { FirebaseAuthService } from '../data/firebase/firebase-auth.adapter';
 import { ImageKitUploadService } from '../services/imagekit';
+import { ApiProductRepository } from '../data/api/api-product.repository';
+import { ApiCategoryRepository } from '../data/api/api-category.repository';
+import { ApiBrandRepository } from '../data/api/api-brand.repository';
+import { ApiAuthService } from '../data/api/api-auth.service';
+import { ApiImageUploadService } from '../data/api/api-image-upload.service';
+import { apiConfig, isApiEnabled } from '../config/api';
 
 /**
  * Composition root: the single place that decides which infrastructure
@@ -28,12 +34,13 @@ import { ImageKitUploadService } from '../services/imagekit';
  *             v
  *   Composition root (this file)
  *         /           \
- *  Firebase adapter   API adapter (future, see src/data/api/README.md)
+ *  Firebase adapter   API adapter (src/data/api/)
  * ```
  *
  * Feature code must never read infrastructure env vars directly (e.g.
- * `VITE_FIREBASE_PROJECT_ID`). All selection lives here; Firebase
- * remains the active implementation (see issue #1).
+ * `VITE_FIREBASE_PROJECT_ID`). All selection lives here; `src/config/api.ts`
+ * holds the per-concern backend switches so data/auth/media can move to the
+ * VPS API independently (see src/data/api/README.md).
  */
 export type DataBackend = 'firebase' | 'mock' | 'api';
 
@@ -44,7 +51,7 @@ export interface RepositorySet {
 }
 
 function resolveDataBackend(): DataBackend {
-  if (import.meta.env.VITE_API_BASE_URL) {
+  if (isApiEnabled) {
     return 'api';
   }
   if (import.meta.env.VITE_FIREBASE_PROJECT_ID) {
@@ -60,8 +67,8 @@ function resolveDataBackend(): DataBackend {
     return 'mock';
   }
   throw new Error(
-    '[composition] No data backend configured. Set VITE_FIREBASE_PROJECT_ID ' +
-      'to use Firebase.'
+    '[composition] No data backend configured. Set VITE_API_BASE_URL to use ' +
+      'the API, or VITE_FIREBASE_PROJECT_ID to use Firebase.'
   );
 }
 
@@ -73,10 +80,13 @@ export function createRepositories(
   backend: DataBackend = resolveDataBackend()
 ): RepositorySet {
   if (backend === 'api') {
-    throw new Error(
-      '[composition] VITE_API_BASE_URL is set, but the API backend is ' +
-        'not implemented yet (see issue #1). Unset it to keep using Firebase.'
-    );
+    return {
+      productRepository: new CachedProductRepository(new ApiProductRepository()),
+      categoryRepository: new CachedCategoryRepository(
+        new ApiCategoryRepository()
+      ),
+      brandRepository: new CachedBrandRepository(new ApiBrandRepository()),
+    };
   }
   if (backend === 'firebase') {
     return {
@@ -110,18 +120,21 @@ export function createRepositories(
 export const repositories: RepositorySet = createRepositories();
 
 /**
- * Active authentication backend. Swapping Firebase Auth for a backend
- * session later means pointing this at the new adapter — the UI
- * (`useAuth`, admin pages) stays untouched.
+ * Active authentication backend. Selected by `VITE_AUTH_BACKEND`
+ * (`firebase` | `api`); both adapters exist, so the UI (`useAuth`, admin
+ * pages) stays untouched either way.
  */
-export const authService: AuthService = new FirebaseAuthService();
+export const authService: AuthService =
+  apiConfig.authBackend === 'api' ? new ApiAuthService() : new FirebaseAuthService();
 
 /**
  * Active image upload backend. Feature code must use this (or a hook
  * returning it) instead of importing `src/services/imagekit.ts` directly.
- * Moving the signature endpoint from the Cloudflare Worker to a VPS
- * backend is an env change (`VITE_IMAGEKIT_AUTH_ENDPOINT`); replacing
- * ImageKit itself later means pointing this at the new adapter.
+ * Selected by `VITE_MEDIA_BACKEND` (`firebase` | `api`): the API adapter
+ * fetches its signature from the backend; the Firebase adapter keeps using
+ * the legacy endpoint (`VITE_IMAGEKIT_AUTH_ENDPOINT`).
  */
 export const imageUploadService: ImageUploadService =
-  new ImageKitUploadService();
+  apiConfig.mediaBackend === 'api'
+    ? new ApiImageUploadService()
+    : new ImageKitUploadService();
