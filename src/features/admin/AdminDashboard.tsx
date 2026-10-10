@@ -4,8 +4,8 @@ import { CatalogProduct } from '../../core/types/catalog';
 import { useProducts } from '../../hooks/useProducts';
 import { useDeleteProduct } from '../../hooks/useDeleteProduct';
 import { useCategories } from '../../hooks/useCategories';
-import { getCategoryName } from '../../utils/categories';
 import { formatPrice } from '../../utils/formatters';
+import { useCategoryName } from '../../services/CategoryNameProvider';
 import { ImageService } from '../../services/imageService';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { useToast } from '../../contexts/ToastContext';
@@ -19,6 +19,7 @@ export function AdminDashboard() {
   const searchQuery = searchParams.get('search') || '';
   const category = searchParams.get('category') || null;
   const { categories } = useCategories();
+  const categoryName = useCategoryName();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CatalogProduct | null>(null);
 
@@ -201,7 +202,7 @@ export function AdminDashboard() {
                       <span className="font-medium text-ink line-clamp-1">{product.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-ink-secondary">{getCategoryName(product.category)}</td>
+                  <td className="px-4 py-3 text-ink-secondary">{categoryName(product.category)}</td>
                   <td className="px-4 py-3 text-right font-medium text-ink">{formatPrice(product.price)}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-block w-2 h-2 rounded-full ${product.isActive ? 'bg-green-500' : 'bg-ink-muted'}`} />

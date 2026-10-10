@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { CatalogProduct } from '../../core/types/catalog';
 import { formatPrice } from '../../utils/formatters';
-import { getCategoryName } from '../../utils/categories';
 import { Rating } from '../../components/ui/Rating';
 import { ImageService } from '../../services/imageService';
+import { useCategoryName } from '../../services/CategoryNameProvider';
 
 interface ProductCardProps {
   product: CatalogProduct;
@@ -11,6 +11,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onQuickView }: ProductCardProps) {
+  const categoryName = useCategoryName();
   const thumbnailUrl = ImageService.getThumbnailUrl(product.thumbnail || '');
 
   return (
@@ -45,7 +46,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
       </Link>
       <div className="p-4 flex flex-col flex-1 gap-2">
         <span className="text-xs font-medium text-ink-secondary bg-surface-hover px-2 py-1 rounded-full self-start uppercase tracking-wide">
-          {getCategoryName(product.category)}
+          {categoryName(product.category)}
         </span>
         <Link
           to={`/product/${product.id}`}
