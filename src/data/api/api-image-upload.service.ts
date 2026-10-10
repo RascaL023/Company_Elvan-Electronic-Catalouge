@@ -33,6 +33,7 @@ function getFileExtension(file: File): string {
 
 export class ApiImageUploadService implements ImageUploadService {
   readonly maxImageSizeMB = MAX_IMAGE_SIZE_MB;
+  readonly cleansUpImagesServerSide = true;
 
   async uploadProductImage({
     file,

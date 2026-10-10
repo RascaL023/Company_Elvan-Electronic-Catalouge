@@ -123,12 +123,14 @@ export async function deleteProductImages(fileIds: string[]): Promise<{ deleted:
 
 export const ImageKitService: ImageUploadService = {
   maxImageSizeMB: MAX_IMAGE_SIZE_MB,
+  cleansUpImagesServerSide: false,
   uploadProductImage,
   deleteProductImages,
 };
 
 export class ImageKitUploadService implements ImageUploadService {
   readonly maxImageSizeMB = MAX_IMAGE_SIZE_MB;
+  readonly cleansUpImagesServerSide = false;
 
   uploadProductImage(
     options: UploadProductImageOptions
