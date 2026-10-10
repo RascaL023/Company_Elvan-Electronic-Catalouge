@@ -60,14 +60,19 @@ function buildUrl(path: string, query?: ApiRequestOptions['query']): string {
     );
   }
   const normalized = path.startsWith('/') ? path : `/${path}`;
-  const url = new URL(`${apiConfig.baseUrl}${normalized}`);
+  const search = new URLSearchParams();
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === undefined || value === null || value === '') continue;
-      url.searchParams.set(key, String(value));
+      search.set(key, String(value));
     }
   }
-  return url.toString();
+  const qs = search.toString();
+  // Concatenate instead of `new URL(...)`: the base may be absolute
+  // (`https://api.example.com/api/v1`) or relative (`/api/v1`, the production
+  // shape where Caddy serves the site and `/api/*` from one origin). A
+  // relative base has no origin of its own, so `new URL` would throw.
+  return `${apiConfig.baseUrl}${normalized}${qs ? `?${qs}` : ''}`;
 }
 
 interface ErrorEnvelope {
