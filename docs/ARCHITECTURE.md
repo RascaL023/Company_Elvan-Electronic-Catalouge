@@ -337,6 +337,9 @@ npm run build              # tsc + vite build (local dist only, never deploy Hos
 npm run check:boundaries   # firebase/env/ImageKit leak checks
 ```
 
+Both run in CI (`.github/workflows/ci.yml`, job `web`); the same workflow runs
+the ImageKit worker tests (`imagekit-auth-worker`, job `worker`).
+
 Manual check against the existing Firebase + Cloudflare Worker infra:
 admin login, product/category/brand CRUD, image upload via ProductForm,
 image delete via product delete/edit. Firebase remains the active
