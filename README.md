@@ -78,11 +78,12 @@ src/core/repositories/brand.repository.ts     # BrandRepository
 Implementasinya bisa ditukar tanpa menyentuh UI:
 - `src/data/mock/` — in-memory (mode tanpa Firebase)
 - `src/data/firebase/` — Firestore (produksi)
-- `src/services/cached-*.repository.ts` — pembungkus cache di atas keduanya
+- `src/data/api/` — backend API VPS (repositori, auth, tanda tangan upload; lihat `src/data/api/README.md`)
+- `src/services/cached-*.repository.ts` — pembungkus cache di atas implementasi mana pun
 
-Pemilihan dilakukan di `src/app/providers.tsx` (satu-satunya tempat). Komponen mengakses lewat `useRepository()`.
+Pemilihan dilakukan di `src/app/composition.ts` (composition root — satu-satunya tempat); `src/app/providers.tsx` hanya menyuntikkan hasilnya. Komponen mengakses lewat `useRepository()`.
 
-> **Pindah ke backend sendiri (VPS)?** Cukup buat implementasi interface baru (mis. `src/data/api/...`) lalu ganti wiring di `providers.tsx`. UI tidak berubah sama sekali.
+> **Pindah ke backend sendiri (VPS)?** Adapternya sudah ada di `src/data/api/`. Cukup set `VITE_API_BASE_URL` (tambah `VITE_AUTH_BACKEND`/`VITE_MEDIA_BACKEND` bila cutover bertahap); Firebase tetap tersedia sebagai jalur rollback. UI tidak berubah sama sekali.
 
 ### 2. Resolusi gambar
 Semua tampilan gambar lewat `src/services/imageService.ts` / `src/utils/imageUrl.ts`. DB hanya menyimpan **key relatif** (provider-agnostic), mis. `assets/images/products/washing_machine/aqw-77d-h.jpg`. Resolver `getImageUrl()` yang memetakan key → URL lengkap sesuai provider aktif:

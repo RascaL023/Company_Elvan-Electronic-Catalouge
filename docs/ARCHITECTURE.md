@@ -4,12 +4,14 @@
 
 This project uses a **repository-based architecture** for clarity, testability, and easy migration. All data access goes through repository interfaces. All image resolution goes through a service layer, so the UI never cares where images are stored.
 
-> **Migration-ready, Firebase still active (issue #1).** The frontend is
-> prepared for a future move to a VPS-hosted backend, but no migration has
-> happened: Firestore, Firebase Auth, the Cloudflare Worker, ImageKit, and
-> Firebase Hosting remain the active infrastructure. A future migration
-> should only require replacing infrastructure adapters (see
-> [Migration boundary](#migration-boundary)), not rewriting features.
+> **Migration-ready; production still on Firebase (issue #1).** API adapters
+> now exist (`src/data/api/`, branch `feat/integration-api`) and can be selected
+> per concern with `VITE_API_BASE_URL` / `VITE_AUTH_BACKEND` /
+> `VITE_MEDIA_BACKEND`, but **no cutover has happened yet**: Firestore,
+> Firebase Auth, the Cloudflare Worker, ImageKit, and Firebase Hosting remain
+> the active infrastructure in production. The migration only swaps
+> infrastructure adapters (see [Migration boundary](#migration-boundary));
+> features are untouched.
 
 Current state:
 - **Public catalog** — product listing, detail page, category & brand filtering.
@@ -33,16 +35,16 @@ Every implementation is swappable without touching the UI:
 
 - `src/data/mock/` — in-memory (demo/dev without Firebase).
 - `src/data/firebase/` — Firestore-backed (production).
-- `src/data/api/README.md` — reserved slot for a future VPS-backed HTTP
-  implementation (no code yet).
+- `src/data/api/` — VPS-backed HTTP implementation (repositories, auth,
+  upload signature; see its README), selected when `VITE_API_BASE_URL` is set.
 - `src/services/cached-*.repository.ts` — thin cache wrapper around any of the above.
 
 The single wiring point is the composition root, `src/app/composition.ts`:
 
 ```ts
 export const repositories: RepositorySet = createRepositories();
-// firebase when VITE_FIREBASE_PROJECT_ID is set,
-// mock fallback in dev, 'api' fails fast until adapters exist.
+// 'api' when VITE_API_BASE_URL is set, else firebase when
+// VITE_FIREBASE_PROJECT_ID is set, else mock (dev only).
 ```
 
 `src/app/providers.tsx` is a thin wrapper that injects `repositories` into
@@ -128,7 +130,7 @@ src/
 ├── data/                          # Concrete implementations — swappable
 │   ├── mock/                      # In-memory (mock-product/category/brand)
 │   ├── firebase/                  # Firestore (repos + mapper) + auth adapter
-│   └── api/README.md              # Reserved slot for future VPS API repos
+│   └── api/                       # VPS API adapters (repos, auth, upload) + README
 │
 ├── services/                      # Cross-cutting logic
 │   ├── DataProvider.tsx           # Context: injects repository instances
@@ -275,7 +277,7 @@ Composition root (src/app/composition.ts)
    +--> Image upload service --> Cloudflare Worker --> ImageKit
 ```
 
-Future architecture (possible, not implemented):
+API-backed architecture (implemented, opt-in; production stays on Firebase until cutover):
 
 ```text
 React UI
@@ -317,7 +319,7 @@ Composition root (src/app/composition.ts)
   rather than Firebase APIs directly.
 - [x] Repository interfaces are usable by both the current Firebase
   implementation and a future HTTP/API implementation (opaque cursors,
-  `id` hints, slug refs; slot reserved in `src/data/api/README.md`).
+  `id` hints, slug refs; implemented in `src/data/api/`).
 - [x] Infrastructure selection is centralized in `src/app/composition.ts`
   (+ `src/config/*`).
 - [x] Image upload/signature functionality continues working through the
