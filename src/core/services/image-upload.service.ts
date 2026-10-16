@@ -35,6 +35,16 @@ export interface UploadProductImageResult {
 
 export interface ImageUploadService {
   readonly maxImageSizeMB: number;
+  /**
+   * True when the provider files are removed **server-side** as part of saving
+   * or deleting a product, so the browser must not delete them again (and must
+   * not report the untouched files as failures).
+   *
+   * `false` for `ImageKitUploadService` (the browser calls the delete
+   * endpoint); `true` for `ApiImageUploadService` (the backend cleans up after
+   * commit — see docs/ARCHITECTURE.md §11).
+   */
+  readonly cleansUpImagesServerSide: boolean;
   uploadProductImage(
     options: UploadProductImageOptions
   ): Promise<UploadProductImageResult>;

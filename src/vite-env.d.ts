@@ -38,11 +38,15 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_STORAGE_BUCKET: string;
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
   readonly VITE_FIREBASE_APP_ID: string;
-  // Future API backend base URL (NOT IMPLEMENTED — see issue #1).
-  // When set, the composition root refuses to boot with a clear error
-  // until ApiRepository adapters exist. Leave empty to use Firebase.
-  // (owner: src/app/composition.ts)
+  // VPS API backend base URL (owner: src/config/api.ts).
+  // Empty → Firebase stays the backend for everything. Set it to run on the
+  // API; opt individual concerns out with the two switches below for a
+  // staged cutover.
   readonly VITE_API_BASE_URL: string;
+  // Per-concern backend overrides: 'firebase' | 'api'.
+  // Default when VITE_API_BASE_URL is set: 'api'.
+  readonly VITE_AUTH_BACKEND: string;
+  readonly VITE_MEDIA_BACKEND: string;
 }
 
 interface ImportMeta {

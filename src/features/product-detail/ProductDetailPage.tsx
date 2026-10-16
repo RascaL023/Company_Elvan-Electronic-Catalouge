@@ -1,11 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { useProduct } from "../../hooks/useProduct";
 import { formatPrice } from "../../utils/formatters";
-import { getCategoryName } from "../../utils/categories";
 import { Rating } from "../../components/ui/Rating";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { ErrorState } from "../../components/feedback/ErrorState";
 import { ImageService } from "../../services/imageService";
+import { useCategoryName } from "../../services/CategoryNameProvider";
 
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ export function ProductDetailPage() {
 const [imageIndex, setImageIndex] = useState(0);
 const [fade, setFade] = useState(false);
   const { product, loading, error } = useProduct(id!);
+  const categoryName = useCategoryName();
 
   if (loading) {
     return (
@@ -106,7 +107,7 @@ onClick={() => handleArrowClick("next")}
           style={{ animationDelay: "150ms" }}
         >
           <span className="text-xs font-medium text-ink-secondary bg-surface-hover px-2 py-1 rounded-full self-start uppercase tracking-wide">
-            {getCategoryName(product.category)}
+            {categoryName(product.category)}
           </span>
           <h1 className="text-2xl lg:text-3xl font-bold text-ink leading-tight">
             {product.name}

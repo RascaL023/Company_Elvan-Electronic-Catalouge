@@ -3,8 +3,8 @@ import { Modal } from '../../components/ui/Modal';
 import { Rating } from '../../components/ui/Rating';
 import { CatalogProduct } from '../../core/types/catalog';
 import { formatPrice } from '../../utils/formatters';
-import { getCategoryName } from '../../utils/categories';
 import { ImageService } from '../../services/imageService';
+import { useCategoryName } from '../../services/CategoryNameProvider';
 
 interface ProductModalProps {
   product: CatalogProduct;
@@ -12,6 +12,8 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ product, onClose }: ProductModalProps) {
+  const categoryName = useCategoryName();
+
   return (
     <Modal open={true} onClose={onClose} maxWidthClass="max-w-2xl lg:max-w-4xl">
       <div className="relative">
@@ -44,7 +46,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           </div>
           <div className="md:w-1/2 p-6 md:p-8 flex flex-col gap-4">
             <span className="text-xs font-medium text-ink-secondary bg-surface-hover px-2 py-1 rounded-full self-start uppercase tracking-wide">
-              {getCategoryName(product.category)}
+              {categoryName(product.category)}
             </span>
             <h2 className="text-xl font-bold text-ink leading-tight">
               {product.name}

@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { DataProvider } from '../services/DataProvider';
+import { CategoryNameProvider } from '../services/CategoryNameProvider';
 import { repositories } from './composition';
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -9,7 +10,9 @@ export function Providers({ children }: { children: ReactNode }) {
       categoryRepository={repositories.categoryRepository}
       brandRepository={repositories.brandRepository}
     >
-      {children}
+      {/* Needs DataProvider above it: category names come from the active
+          category repository, so display labels follow the data. */}
+      <CategoryNameProvider>{children}</CategoryNameProvider>
     </DataProvider>
   );
 }

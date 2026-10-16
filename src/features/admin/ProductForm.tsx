@@ -233,7 +233,9 @@ export function ProductForm() {
 
         await productRepository.update(id, payload);
 
-        if (removedFileIds.length > 0) {
+        // The API backend removes dropped images server-side on PATCH; only the
+        // browser-backed adapter still has files left to delete here.
+        if (removedFileIds.length > 0 && !imageUploadService.cleansUpImagesServerSide) {
           try {
             await imageUploadService.deleteProductImages(removedFileIds);
           } catch (deleteErr) {

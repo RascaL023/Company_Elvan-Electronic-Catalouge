@@ -1,0 +1,55 @@
+name: CI
+
+# The FE repo had no automated gate before this: a PR could land without the
+# build or the architecture boundary check ever running (rules described in
+# docs/ARCHITECTURE.md). Deliberately no deploy step — the frontend is still
+# built and deployed manually from a local `dist/`.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+
+      # Architecture boundary: the `api` path must not touch Firebase, and UI
+      # layers must not read env/ImageKit directly (scripts/check-boundaries.sh).
+      - name: check:boundaries
+        run: npm run check:boundaries
+
+      - name: build (tsc + vite build)
+        run: npm run build
+
+  worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: imagekit-auth-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: imagekit-auth-worker/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      # `vitest` defaults to watch mode in a terminal; `--run` forces a single
+      # pass. The tests use the fake binding from vitest.config.mts, so no real
+      # ImageKit key is needed.
+      - name: test
+        run: npm test -- --run

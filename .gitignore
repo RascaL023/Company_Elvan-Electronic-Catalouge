@@ -21,3 +21,4 @@ dist/
 *.tsbuildinfo
 vite.config.ts.timestamp-*
 **.bak
+export-firestore*.json
