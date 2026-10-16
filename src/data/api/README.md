@@ -19,12 +19,12 @@ rollback. See `src/config/api.ts` for the switch semantics and
 
 | File | Contract |
 |---|---|
-| `http-client.ts` | `apiRequest()` — `fetch` with `credentials: 'include'`, base URL from env, error envelope → typed `ApiError` |
+| `http-client.ts` | `apiRequest()` — `fetch` with `credentials: 'include'`, base URL from env, error envelope → typed `ApiError`; `onUnauthorized()` untuk reaksi global `401` |
 | `mappers.ts` | DTO ↔ domain mapping (image shape, write body, dates) |
 | `api-product.repository.ts` | `ProductRepository` |
 | `api-category.repository.ts` | `CategoryRepository` |
 | `api-brand.repository.ts` | `BrandRepository` |
-| `api-auth.service.ts` | `AuthService` via the admin session cookie (`GET /auth/me`) |
+| `api-auth.service.ts` | `AuthService` via the admin session cookie (`GET /auth/me`); menurunkan status login saat `onUnauthorized` menyala |
 | `api-image-upload.service.ts` | `ImageUploadService` (signature from the API, upload still browser → ImageKit) |
 
 ## Enabling it
@@ -59,6 +59,9 @@ while uploads still go through the Worker).
 ## Backend behaviors this layer relies on
 
 - Auth: HttpOnly session cookie; `401` means "no/expired session".
+  `apiRequest` melaporkan `401` dari endpoint selain `POST /auth/login` lewat
+  `onUnauthorized`, dan `ApiAuthService` memakainya untuk mengubah status login
+  UI saat sesi habis/dicabut di tengah pemakaian (tanpa perlu reload).
 - Media: `GET /media/signature` requires an admin session. `ApiImageUploadService`
   sets `cleansUpImagesServerSide = true`, so call sites (`useDeleteProduct`,
   `ProductForm`) do **not** delete files in the browser — the API removes them

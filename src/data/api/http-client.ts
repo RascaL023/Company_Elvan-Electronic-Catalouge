@@ -11,6 +11,40 @@
 
 import { apiConfig } from '../../config/api';
 
+/**
+ * Pendengar global untuk respons `401` (sesi admin habis atau dicabut).
+ *
+ * `ApiAuthService` mendaftar di sini supaya status login di UI ikut turun
+ * begitu API menolak sesi. Tanpa ini, UI tetap menampilkan admin sebagai
+ * login dan setiap aksi baru gagal dengan toast sampai halaman di-reload.
+ *
+ * `POST /auth/login` dikecualikan: `401` di sana berarti password salah,
+ * bukan sesi yang berakhir.
+ */
+const UNAUTHORIZED_EXEMPT_PATHS = ['/auth/login'];
+
+type UnauthorizedListener = () => void;
+const unauthorizedListeners = new Set<UnauthorizedListener>();
+
+/** Daftarkan pendengar 401; nilai kembaliannya untuk melepas pendaftaran. */
+export function onUnauthorized(listener: UnauthorizedListener): () => void {
+  unauthorizedListeners.add(listener);
+  return () => {
+    unauthorizedListeners.delete(listener);
+  };
+}
+
+function isUnauthorizedExempt(path: string): boolean {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return UNAUTHORIZED_EXEMPT_PATHS.some(
+    (exempt) => normalized === exempt || normalized.startsWith(`${exempt}/`)
+  );
+}
+
+function notifyUnauthorized(): void {
+  for (const listener of unauthorizedListeners) listener();
+}
+
 export interface ApiFieldDetail {
   field: string;
   message: string;
@@ -127,6 +161,11 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    // Sesi habis/dicabut di tengah pemakaian: beri tahu lapisan auth dulu
+    // supaya UI ikut turun ke keadaan logged-out.
+    if (response.status === 401 && !isUnauthorizedExempt(path)) {
+      notifyUnauthorized();
+    }
     throw toApiError(response.status, parsed);
   }
 

@@ -13,7 +13,7 @@ import type {
   AuthService,
   AuthUser,
 } from '../../core/auth/auth-service';
-import { apiRequest, ApiError } from './http-client';
+import { apiRequest, ApiError, onUnauthorized } from './http-client';
 import type { AdminDto, SessionDto } from './mappers';
 
 function toAuthUser(admin: AdminDto): AuthUser {
@@ -24,6 +24,16 @@ export class ApiAuthService implements AuthService {
   private listeners = new Set<(user: AuthUser | null) => void>();
   private current: AuthUser | null = null;
   private initPromise: Promise<void> | null = null;
+
+  constructor() {
+    // Sesi bisa berakhir di tengah pemakaian (TTL habis atau dicabut): begitu
+    // ada 401 dari endpoint selain login, UI langsung diturunkan ke keadaan
+    // logged-out. Pendaftaran ini berumur sepanjang umur halaman — service-nya
+    // singleton dari composition root, jadi tidak perlu dilepas.
+    onUnauthorized(() => {
+      if (this.current) this.emit(null);
+    });
+  }
 
   onSessionChange(callback: (user: AuthUser | null) => void): () => void {
     this.listeners.add(callback);
